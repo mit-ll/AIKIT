@@ -51,27 +51,14 @@ Retrieval-Augmented Generation (RAG), and Ruby-on-Rails web interface.
 
   singularity build aikit.sif aikit.def
 
-  singularity build --sandbox aikit_box aikit.def			Note: builds Singularity sandbox
-
-**To run:**
-
-    singularity run --nv -B io/:/io/ -B <squashfs>:/io/hub/<model>:image-src=/ aikit.sif <Your program details>
-
-**Example LLM Python application:**
-
-    singularity run --nv -B io/:/io/ -B Llama-2-7b-chat-hf.sqsh:/io/hub/models--meta-llama--Llama-2-7b-chat-hf:image-src=/ aikit.sif python /io/llama2_cli.py "How to cook fish?"
-
-**Jupyter notebook example:**
-
-  singularity run --nv -B io/:/io/ -B falcon-7b.sqsh:/io/hub/models--tiiuae--falcon-7b:image-src=/ aikit_box jupyter notebook --allow-root --ip='*' --NotebookApp.token='' --NotebookApp.password=''
-
-**Singularity Crystal LLM Rails interface example:**
+**Singularity AIKIT Rails interface example:**
 
   Place LLM models in io/hub
 
-  singularity run --nv -B io/:/io/ --writable aikit_box "rails s -b 0.0.0.0"
+  singularity run --nv -B io/:/io/ aikit.sif "rails s -b 0.0.0.0"
   
   AIKIT web interface on port 3000 on hosting server
+
 
 **Docker**
 
@@ -81,26 +68,8 @@ Retrieval-Augmented Generation (RAG), and Ruby-on-Rails web interface.
 
 **To run:**
 
-  docker run -it aikit:latest bash
-
-**Docker LLM Python example:**
-
-  docker run --gpus all -v /data/da23452/llm/aikit/io:/io -v /data/da23452/llm/llama2/models--meta-llama--Llama-2-7b-chat-hf:/io/hub/models--meta-llama--Llama-2-7b-chat-hf aikit:latest python llama2_cli.py "How to cook pasta?"
-
-**Example Jupyter notebook using LangChain:**
-
-  LangChain_example.ipynb
-
-**Docker Crystal LLM Rails interface example:**
-
   Place LLM models in io/hub
 
-  docker run --gpus all -v ${PWD}/io:/io aikit:latest rails s -b 0.0.0.0
+  ./docker_up.cmds
 
-or
-
-  docker volume create --name io -o type=none -o o=bind -o device=${PWD}/io
-
-  docker-compose up
-  
   AIKIT web interface on port 3000 on hosting server
