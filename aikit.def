@@ -1,8 +1,6 @@
 Bootstrap: docker
 From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 
-# Author: Darrell O. Ricke, Ph.D. (Darrell.Ricke@ll.mit.edu)
-
 ################################################################################
 # Author: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
 #
@@ -45,17 +43,11 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   mkdir -p ${SINGULARITY_ROOTFS}/io/
 
 %files
-  dependencies/apt.conf /etc/apt/apt.conf
   dependencies/wgetrc /S/wgetrc
   dependencies/llms_requirements.txt /S
   AIKit_UI.tar /S
 
 %post
-  export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
-
   export DEBIAN_FRONTEND=noninteractive
 
   apt-get update
@@ -94,18 +86,12 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   python3 get-pip.py
 
   cp /S/wgetrc /etc
-# cd /S && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /S/miniconda.sh
-# bash /S/miniconda.sh -b -p /S/miniconda/
-# export PATH="/S/miniconda/bin/:$PATH"
 
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs 
   chmod +x sh.rustup.rs 
   ./sh.rustup.rs -y
   export PATH=~/.cargo/bin:$PATH
 
-# conda create -n llama2
-# conda init bash
-# conda activate llama2
   pip install -r llms_requirements.txt
   pip install llama-cpp-python 
   pip install fastapi uvicorn sse-starlette requests
@@ -164,11 +150,6 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 %environment
   export DEBIAN_FRONTEND=noninterative
   export PATH=/usr/local/cuda/bin:/S/miniconda/bin/:$PATH
-
-  export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
-  export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
 
   export HF_HOME=/io
   export HF_HUB_CACHE=/io/hub

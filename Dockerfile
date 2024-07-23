@@ -39,12 +39,6 @@ MAINTAINER Darrell Ricke <Darrell.Ricke@ll.mit.edu>
 # GNU General Public License for more details.
 ################################################################################
 
-ENV http_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV https_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV ftp_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1
-COPY dependencies/apt.conf /etc/apt/apt.conf
-
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
