@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  mfq_name: MyString
+  squadron: MyString
+  source: MyString
+  number_questions: 1
+  create_at: 2024-04-24 13:46:18
+  updated_at: 2024-04-24 13:46:18
+
+two:
+  user_id: 1
+  mfq_name: MyString
+  squadron: MyString
+  source: MyString
+  number_questions: 1
+  create_at: 2024-04-24 13:46:18
+  updated_at: 2024-04-24 13:46:18

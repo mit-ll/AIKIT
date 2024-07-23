@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  folder_id: 1
+  list_name: MyString
+  is_private: false
+  is_public: false
+
+two:
+  user_id: 1
+  folder_id: 1
+  list_name: MyString
+  is_private: false
+  is_public: false

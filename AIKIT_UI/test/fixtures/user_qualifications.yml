@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  qualification_id: 1
+  date_qualified: 2024-05-03 13:49:30
+  updated_training: 2024-05-03 13:49:30
+  experience_level: 1.5
+
+two:
+  user_id: 1
+  qualification_id: 1
+  date_qualified: 2024-05-03 13:49:30
+  updated_training: 2024-05-03 13:49:30
+  experience_level: 1.5

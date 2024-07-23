@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  parent_id: 1
+  user_id: 1
+  group_id: 1
+  folder_name: MyString
+  folder_level: 1
+  is_private: false
+  is_public: false
+  group_write: false
+  update_at: 2024-02-22 08:47:12
+
+two:
+  parent_id: 1
+  user_id: 1
+  group_id: 1
+  folder_name: MyString
+  folder_level: 1
+  is_private: false
+  is_public: false
+  group_write: false
+  update_at: 2024-02-22 08:47:12

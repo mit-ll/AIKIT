@@ -1,0 +1,8 @@
+ rails generate scaffold folder parent_id:integer user_id:integer group_id:integer folder_name:string folder_level:integer is_private:boolean is_public:boolean group_write:boolean update_at:datetime
+ rails generate scaffold document folder_id:integer user_id:integer filename:string pathname:string file_type:string content_type:string file_parsed:boolean is_private:boolean is_public:boolean update_at:datetime contents_byte:integer contents:binary
+ rails generate scaffold user user_sid:string user_name:string user_email:string phone:string
+ rails generate scaffold group parent_id:string group_name:string
+ rails generate scaffold user_group user_id:integer group_id:integer role:string
+ rails generate scaffold favorite user_id:integer folder_id:integer document_id:integer favorite_list_id:integer
+ rails generate scaffold favorite_list user_id:integer folder_id:integer list_name:string is_private:boolean is_public:boolean
+ rails generate scaffold query user_id:integer folder_id:integer look:string op:string match:string query_sql:string query_name:string is_private:boolean is_public:boolean updated_at:datetime

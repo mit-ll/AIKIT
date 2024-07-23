@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  llm_id: 1
+  test_id: 1
+  test_question_id: 1
+  is_valid: false
+  is_modified: false
+  is_missing: false
+  llm_text: MyString
+
+two:
+  llm_id: 1
+  test_id: 1
+  test_question_id: 1
+  is_valid: false
+  is_modified: false
+  is_missing: false
+  llm_text: MyString

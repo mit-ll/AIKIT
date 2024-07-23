@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  folder_id: 1
+  user_id: 1
+  filename: MyString
+  pathname: MyString
+  file_type: MyString
+  content_type: MyString
+  file_parsed: false
+  is_private: false
+  is_public: false
+  update_at: 2024-02-22 08:48:39
+  contents_byte: 1
+  contents: 
+
+two:
+  folder_id: 1
+  user_id: 1
+  filename: MyString
+  pathname: MyString
+  file_type: MyString
+  content_type: MyString
+  file_parsed: false
+  is_private: false
+  is_public: false
+  update_at: 2024-02-22 08:48:39
+  contents_byte: 1
+  contents: 

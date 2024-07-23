@@ -1,0 +1,31 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  test_id: 1
+  llm_id: 1
+  question: MyString
+  reference: MyString
+  option_a: MyString
+  option_b: MyString
+  option_c: MyString
+  option_d: MyString
+  option_e: MyString
+  option_f: MyString
+  answer: MyString
+  created_at: 2024-04-24 13:44:04
+  updated_at: 2024-04-24 13:44:04
+
+two:
+  test_id: 1
+  llm_id: 1
+  question: MyString
+  reference: MyString
+  option_a: MyString
+  option_b: MyString
+  option_c: MyString
+  option_d: MyString
+  option_e: MyString
+  option_f: MyString
+  answer: MyString
+  created_at: 2024-04-24 13:44:04
+  updated_at: 2024-04-24 13:44:04
