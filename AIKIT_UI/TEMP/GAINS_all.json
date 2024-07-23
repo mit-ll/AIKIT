@@ -1,1 +1,0 @@
-{"documents":"TEMP/GAINS_all","vector_store":"FAISS","collection":"GAINS_all","rag_params":{"max_new_tokens":"1024","repetition_penalty":"1.15","chunk_size":"1000","chunk_overlap":"10","emb_model_name":"sentence-transformers/all-mpnet-base-v2"}}
