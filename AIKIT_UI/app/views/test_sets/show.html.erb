@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @test_set %>
+<br/>
+<div>
+  <%= link_to "Back to test sets", test_sets_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this test set", edit_test_set_path(@test_set) %>
+    <%= button_to "Destroy this test set", @test_set, method: :delete %>
+  <% end -%>
+</div>

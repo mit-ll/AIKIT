@@ -1,0 +1,47 @@
+<%= form_with(model: document) do |form| %>
+  <% if document.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(document.errors.count, "error") %> prohibited this document from being saved:</h2>
+
+      <ul>
+        <% document.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :filename, style: "display: block" %>
+    <%= form.text_field :filename %>
+  </div>
+
+  <div>
+    <%= form.label :file_type, style: "display: block" %>
+    <%= form.text_field :file_type %>
+  </div>
+
+  <div>
+    <%= form.label :content_type, style: "display: block" %>
+    <%= form.text_field :content_type %>
+  </div>
+
+  <div>
+    <%= form.label :is_public, style: "display: block" %>
+    <%= form.check_box :is_public %>
+  </div>
+
+  <div>
+    <%= form.label :contents_byte, style: "display: block" %>
+    <%= form.number_field :contents_byte %>
+  </div>
+
+  <div>
+    <%= form.label :contents, style: "display: block" %>
+    <%= form.text_field :contents %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

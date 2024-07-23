@@ -1,0 +1,34 @@
+<%= form_with(model: llm) do |form| %>
+  <% if llm.errors.any? -%>
+    <div style="color: red">
+      <h2><%= pluralize(llm.errors.count, "error") %> prohibited this llm from being saved:</h2>
+
+      <ul>
+        <% llm.errors.each do |error| -%>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end -%>
+
+  <table>
+    <thead></thead>
+    <tbody>
+      <tr>
+        <div>
+          <td><%= form.label :llm_name, style: "display: block" %></td>
+          <td><%= form.text_field :llm_name, :size => "80" %></td>
+        </div>
+      </tr><tr> 
+        <div>
+          <td><%= form.label :llm_version, style: "display: block" %></td>
+          <td><%= form.text_field :llm_version, :size => "80" %></td>
+        </div>
+      </tr>
+    </tbody>
+  </table>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

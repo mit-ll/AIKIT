@@ -1,0 +1,179 @@
+Bootstrap: docker
+From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+
+# Author: Darrell O. Ricke, Ph.D. (Darrell.Ricke@ll.mit.edu)
+
+################################################################################
+# Author: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
+#
+# RAMS request ID 1028310
+# RAMS title: Artificial Intelligence tools for Knowledge-Intensive Tasks (AIKIT) 
+#
+# DISTRIBUTION STATEMENT A. Approved for public release. Distribution is unlimited.
+#
+# This material is based upon work supported by the Department of the Air Force 
+# under Air Force Contract No. FA8702-15-D-0001. Any opinions, findings, 
+# conclusions or recommendations expressed in this material are those of the 
+# author(s) and do not necessarily reflect the views of the Department of the Air Force.
+#
+# Copyright © 2024 Massachusetts Institute of Technology.
+#
+# Subject to FAR52.227-11 Patent Rights - Ownership by the contractor (May 2014)
+#
+# The software/firmware is provided to you on an As-Is basis
+#
+# Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS 
+# Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, 
+# U.S. Government rights in this work are defined by DFARS 252.227-7013 or 
+# DFARS 252.227-7014 as detailed above. Use of this work other than as 
+# specifically authorized by the U.S. Government may violate any copyrights 
+# that exist in this work.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+################################################################################
+
+%setup
+  mkdir -p ${SINGULARITY_ROOTFS}/S
+  mkdir -p ${SINGULARITY_ROOTFS}/io/
+
+%files
+  dependencies/apt.conf /etc/apt/apt.conf
+  dependencies/wgetrc /S/wgetrc
+  dependencies/llms_requirements.txt /S
+  AIKit_UI.tar /S
+
+%post
+  export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
+
+  export DEBIAN_FRONTEND=noninteractive
+
+  apt-get update
+  apt-get install -y build-essential coreutils
+  apt-get install -y bzip2 git g++ gfortran libreadline6-dev libncurses5-dev xorg-dev libpng-dev libbz2-dev
+  apt-get install -y liblzma-dev libpcre3-dev make libcairo2-dev libgtk2.0-dev
+  apt-get install -y locales libcurl4-nss-dev
+  apt-get install -y language-pack-en language-pack-en-base
+  apt-get install -y git curl unzip bc tabix
+  apt-get install -y libssl-dev libgit2-dev libssh2-1-dev
+  apt-get install -y gcc zip
+  apt-get install -y python3.11 gcc zip python3-dev
+  apt-get install -y zlib1g-dev libbz2-dev liblzma-dev pigz libncurses5-dev
+  apt-get install -y libreadline-dev
+  apt-get install -y openssl
+  apt-get install -y gnupg2
+  apt-get install -y libmysqlclient-dev
+  apt-get install -y nodejs
+  apt-get install -y sqlite3
+  apt-get install -y ruby-full
+  apt-get install -y rubygems
+  apt-get install -y wget 
+  apt-get install -y vim
+  apt-get install -y libyaml-dev
+  apt-get install -y libsqlite3-dev
+
+  gem install bundler
+  gem install mysql2
+  gem install sqlite3
+  gem install rake
+  gem install tzinfo-data
+  gem install rails
+
+  cd /S
+  curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
+  python3 get-pip.py
+
+  cp /S/wgetrc /etc
+# cd /S && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /S/miniconda.sh
+# bash /S/miniconda.sh -b -p /S/miniconda/
+# export PATH="/S/miniconda/bin/:$PATH"
+
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs 
+  chmod +x sh.rustup.rs 
+  ./sh.rustup.rs -y
+  export PATH=~/.cargo/bin:$PATH
+
+# conda create -n llama2
+# conda init bash
+# conda activate llama2
+  pip install -r llms_requirements.txt
+  pip install llama-cpp-python 
+  pip install fastapi uvicorn sse-starlette requests
+  pip install numba
+
+  pip install transformers
+  pip install gradio
+  pip install langchain-community==0.2.1 langchain-core==0.2.1
+  pip install langchain
+  pip install "langserve[all]"
+  pip install langgraph
+  pip install langchain_openai
+  pip install langchainhub
+  pip install scipy
+  pip install einops
+  pip install optimum
+  pip install accelerate
+
+  pip install bitsandbytes
+  pip install build
+  pip install chromadb
+  pip install datasets
+  pip install faiss-cpu
+  pip install langchain-chroma
+  pip install langchain-community
+  pip install langchain_mistralai
+  pip install peft
+  pip install pettingzoo
+  pip install pypdf[crypto]
+  pip install sentence_transformers
+  pip install tensorflow
+  pip install tokenizers
+  pip install torch
+  pip install tqdm
+  pip install trl
+  pip install "unstructured[all-docs]"
+  pip install docx
+  pip install "transformers[sentencepiece]"
+  pip install langchain-huggingface
+
+  git clone https://github.com/facebookresearch/llama.git
+  cd /S/llama
+  pip install .
+  cd /S
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor --no-tty -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list 
+  apt-get update
+  apt-get install -y nvidia-container-toolkit
+
+  tar -xf AIKit_UI.tar
+  cd AIKit_UI
+  bundle update
+
+%environment
+  export DEBIAN_FRONTEND=noninterative
+  export PATH=/usr/local/cuda/bin:/S/miniconda/bin/:$PATH
+
+  export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
+
+  export HF_HOME=/io
+  export HF_HUB_CACHE=/io/hub
+  export HF_ASSETS_CACHE=/io/assets
+
+%runscript
+  cd /io
+  "$@"

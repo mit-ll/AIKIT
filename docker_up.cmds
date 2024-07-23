@@ -1,0 +1,9 @@
+#!/bin/bash
+
+NW_NAME=aikit_default
+NW=105
+
+docker-compose down
+docker network remove $NW_NAME
+docker network ls
+docker network create --driver=bridge --subnet 172.$NW.0.0/16 $NW_NAME && docker-compose up

@@ -1,0 +1,27 @@
+<%= form_with(model: collection) do |form| %>
+  <% if collection.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(collection.errors.count, "error") %> prohibited this collection from being saved:</h2>
+
+      <ul>
+        <% collection.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :collection_name, style: "display: block" %>
+    <%= form.text_field :collection_name %>
+  </div>
+
+  <div>
+    <%= form.label :vector_name, style: "display: block" %>
+    <%= form.text_field :vector_name %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

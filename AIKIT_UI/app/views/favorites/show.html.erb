@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @favorite %>
+
+<div>
+  <%= link_to "Back to favorites", favorites_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this favorite", edit_favorite_path(@favorite) %>
+    <%= button_to "Destroy this favorite", @favorite, method: :delete %>
+  <% end -%>
+</div>

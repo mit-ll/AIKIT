@@ -1,0 +1,31 @@
+<p style="color: green"><%= notice %></p>
+
+<h1><%= @parameter_set.set_type %> set: <%= @parameter_set.set_name %></h1>
+
+<table cellpadding="2" class="display compact dataTable" id="example">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Value</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @parameters.each do |parameter| -%>
+      <tr>
+        <td><%= parameter.parameter_name %></td>
+        <td><%= parameter.parameter_value %></td>
+        <td><%= link_to "Edit", edit_parameter_path(parameter) %></td>
+      </tr>
+    <% end -%>
+  </tbody>
+</table>
+<br/>
+<div>
+  <%= link_to "Edit this parameter set", edit_parameter_set_path(@parameter_set) %> |
+  <%= link_to "Back to parameter sets", parameter_sets_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= button_to "Destroy this parameter set", @parameter_set, method: :delete %>
+  <% end -%>
+</div>

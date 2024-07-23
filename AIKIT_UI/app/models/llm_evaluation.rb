@@ -1,0 +1,2 @@
+class LlmEvaluation < ApplicationRecord
+end

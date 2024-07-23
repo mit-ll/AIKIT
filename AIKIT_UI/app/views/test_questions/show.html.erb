@@ -1,0 +1,20 @@
+<p style="color: green"><%= notice %></p>
+
+<br/>
+<h3>Question <%= @test_question.question_number %></h3>
+<div>
+  <% if ! @test_question.previous_id.nil? -%>
+    <%= link_to "Previous", id: @test_question.previous_id %> |
+  <% end -%>
+  <% if ! @test_question.next_id.nil? -%>
+    <%= link_to "Next", id: @test_question.next_id %>
+  <% end -%>
+<%= render @test_question %>
+<br/>
+  <%= link_to "Back to test questions", test_questions_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this test question", edit_test_question_path(@test_question) %>
+    <%= button_to "Destroy this test question", @test_question, method: :delete %>
+  <% end -%>
+</div>

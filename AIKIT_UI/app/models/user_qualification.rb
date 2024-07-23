@@ -1,0 +1,2 @@
+class UserQualification < ApplicationRecord
+end

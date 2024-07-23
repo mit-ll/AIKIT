@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  webapp:
+    build: .
+    env_file:
+      - .env
+    image: aikit:latest
+    volumes:
+      - $PWD/io:/io
+    expose:
+      - "3000"
+    ports:
+      - "0.0.0.0:3000:3000"
+    restart: on-failure
+    command: "/bin/bash rails s -b 0.0.0.0"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

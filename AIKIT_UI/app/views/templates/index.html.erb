@@ -1,0 +1,27 @@
+<p style="color: green"><%= notice %></p>
+<h1>LLM Templates</h1>
+
+<div id="templates">
+  <table class="display compact dataTable" id="example" border="1">
+    <thead>
+      <tr>
+        <th>Template</th>
+        <th>Prompt Input</th>
+        <th>input_variables</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @templates.each do |template| -%>
+        <tr>
+          <td><%= template.template_text %></td>
+          <td><%= template.prompt_input %></td>
+          <td><%= template.input_variables %></td>
+          <td><%= link_to "Show", template %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+
+<%= link_to "New LLM template", new_template_path %>

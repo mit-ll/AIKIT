@@ -1,0 +1,2 @@
+class CollectionDocument < ApplicationRecord
+end

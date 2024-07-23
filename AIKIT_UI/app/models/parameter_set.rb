@@ -1,0 +1,2 @@
+class ParameterSet < ApplicationRecord
+end

@@ -1,0 +1,55 @@
+<%= form_with(model: llm_question) do |form| %>
+  <% if llm_question.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(llm_question.errors.count, "error") %> prohibited this LLM question from being saved:</h2>
+
+      <ul>
+        <% llm_question.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <table>
+      <thead></thead>
+      <tbody>
+        <tr>
+          <td>Question(s) - one per line</td>
+        </tr><tr>
+          <td><%= form.text_area :question_text, :size => "120x10" %></td>
+        </tr><tr>
+          <td><%= collection_select :template_id, :template_id, @templates, :id, :template_text, prompt: "Optional Template" %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <br/>
+  <div>
+    <table>
+      <thead></thead>
+      <tbody>
+        <tr>
+          <td><b>Optional new template</b></td><td></td>
+        </tr><tr>
+          <td width="10%"><b>Template</b></td>
+          <td><%= text_area_tag :template_text, nil, :size => "110x6" %></td>
+        </tr>
+        <% if session[:level] >= 1 -%>
+          <tr>
+            <td width="10%"><b>Prompt input</b></td>
+            <td><%= text_area_tag :prompt_input, nil, :size => "110x1" %></td>
+          </tr><tr>
+            <td width="10%"><b>Input variables</b></td>
+            <td><%= text_area_tag :input_variables, nil, :size => "110x1" %></td>
+          </tr>
+        <% end -%>
+      </tbody>
+    </table>
+  </div>
+  <br/>
+  <div>
+    <%= form.submit %>
+  </div>
+<% end -%>
