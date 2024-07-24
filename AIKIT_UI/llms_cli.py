@@ -54,7 +54,7 @@ environ["TRANSFORMERS_CACHE"] = "/io"
 
 ###############################################################################
 def call_llm(model_id, message):
-    hf_token =" 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"
+    hf_token =" hf_Y..."
     tokenizer = AutoTokenizer.from_pretrained(model_id, token=hf_token, load_in_16bit=True, trust_remote_code=True, device_map="auto", )
     
     pipeline = transformers.pipeline(

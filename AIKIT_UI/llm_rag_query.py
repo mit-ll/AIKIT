@@ -210,8 +210,8 @@ def run_llm_rag( params, hf_token, db ):
 # environ["TRANSFORMERS_OFFLINE"] = "1"
 environ["TRANSFORMERS_CACHE"] = "."
 
-environ["HF_KEY"] = "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"
-hf_token = "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"
+environ["HF_KEY"] = "hf_Y..."
+hf_token = "hf_Y..."
 # if 'HF_KEY' in environ.keys():
 #   hf_token = environ["HF_KEY"]
 # else:
