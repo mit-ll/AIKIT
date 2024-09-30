@@ -44,6 +44,7 @@
 ###############################################################################
 
 Rails.application.routes.draw do
+  resources :sources
   resources :user_tests
   resources :user_tests do
     member do
@@ -98,6 +99,7 @@ Rails.application.routes.draw do
       get :download
       get :level_plus
       get :level_minus
+      get :level_set
       post :query
     end  # do
   end  # do
@@ -139,5 +141,5 @@ Rails.application.routes.draw do
     end  # do
   end  # do
 
-  root :to => "folders#index"
+  root :to => "llm_questions#index"
 end

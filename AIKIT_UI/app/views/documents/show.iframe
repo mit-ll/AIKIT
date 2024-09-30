@@ -1,4 +1,0 @@
-<p style="color: green"><%= notice %></p>
-
-<iframe src=<%= "#{@document.contents}" %> width="1600" height="1780" style="border: none;"></iframe>
-
