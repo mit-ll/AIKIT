@@ -1,0 +1,73 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Documents</h1>
+
+<div id="documents">
+ <%= form_tag( {controller: :documents, action: :add_favorites }, {method: :get, id: 'favorites_form'} ) do  %>
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <% if session[:level] >= 5 -%>
+          <th>Favorites</td>
+        <% end -%>
+        <% if session[:level] >= 3 -%>
+          <th>Collection</td>
+        <% end -%>
+        <th>Download</th>
+        <th>View</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @documents.each do |document| -%>
+        <tr>
+          <% if session[:level] >= 5 -%>
+            <td align="center"><%= check_box_tag( "doc_ids[]", document.id, @favorites[document.id], { multiple: true } ) %></td>
+          <% end -%>
+          <% if session[:level] >= 3 -%>
+            <td align="center"><%= check_box_tag( "col_ids[]", document.id, nil, { multiple: true } ) %></td>
+          <% end -%>
+          <td><%= link_to document.filename, :id => document.id, :controller => :documents, :action => :download %></td>
+          <td><%= link_to "Show", document %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+  <br/>
+  <table border="2">
+    <thead></thead>
+    <tbody>
+      <% if session[:level] >= 5 -%>
+        <tr>
+          <div>
+            <td><b>New favorite list name:</b></td>
+            <td><%= text_field_tag :fav_list_name, '', :size => "40" %></td>
+          </div>
+          <div>
+            <td><%= select_tag "list_name", options_for_select(@list_names) %></td>
+          </div>
+          <div>
+            <td><%= submit_tag( 'Add Favorites', id: 'favorites_btn' ) %></td>
+          </div>
+        </tr>
+      <% end -%>
+      <% if session[:level] >= 3 -%>
+        <tr>
+          <div>
+            <td><b>New LLM RAG collection name:</b></td>
+            <td><%= text_field_tag :col_name, '', :size => "40" %></td>
+          </div>
+          <div>
+            <td><%= select_tag "vec_name", options_for_select(Collection::VECTOR_STORES) %></td>
+          </div>
+            <div>
+              <td><%= collection_select :parameter_set_id, :parameter_set_id, @parameter_sets, :id, :set_name, prompt: "Select RAG parameter set" %></td>
+            </div>
+          <div>
+            <td><%= submit_tag( 'Create collection', id: 'collection_btn' ) %></td>
+          </div>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+ <% end -%>
+</div>

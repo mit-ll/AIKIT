@@ -1,5 +1,6 @@
 require 'json'
 require 'open3'
+require 'output_file'
 
 class Collection < ApplicationRecord
 
@@ -28,6 +29,8 @@ class Collection < ApplicationRecord
 
   ##############################################################################
   def self.add_documents( doc_ids, collection_name, vector_name, user_id, rag_parameter_set_id )
+    puts "Collection::add_documents"
+
     # Find or create the favorite list.
     collection = Collection.where( user_id: user_id, collection_name: collection_name ).take
     if collection.nil?
@@ -60,6 +63,7 @@ class Collection < ApplicationRecord
         collection_doc.user_id = user_id
         collection_doc.collection_id = collection.id
         collection_doc.document_id = doc_id
+        collection_doc.filename = document.filename
         collection_doc.updated_at = Time::now
         collection_doc.save
 
@@ -73,7 +77,12 @@ class Collection < ApplicationRecord
 
     # Set up the parameters to create the LLM RAG vector store collection.
     params = self.set_rag_params( collection_name, vector_name, rag_parameter_set_id )
-    File.write( "TEMP/#{collection_name}.json", params.to_json )
+    puts "params: #{params}"
+
+    json_file = OutputFile.new( "TEMP/#{collection_name}.json" )
+    json_file.open_file()
+    json_file.write( "#{params.to_json}\n" )
+    json_file.close_file()
 
     # Create the vector store.
     # stdout, stderr, status = Open3.capture3("python3 docs_to_vector.py TEMP/#{collection_name} #{vector_name} #{collection_name}")

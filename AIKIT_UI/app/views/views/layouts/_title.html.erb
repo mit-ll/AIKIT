@@ -1,0 +1,32 @@
+<table>
+  <thead></thead>
+  <tbody>
+    <tr>
+      <td width="30"><%= image_tag("MITLL_logo.png", height: 50, width: 40) %></td>
+      <td>
+        <span class="headerTitleLarge">ICE<sup>3</sup></span>
+        <% if session[:level].nil? || session[:level] < 1 -%>
+          <span class="headerTitleNext">&nbsp;LLM </span>
+        <% else -%>
+          <% if session[:level] < 7 -%>
+            <span class="headerTitleNext">&nbsp;LLM RAG </span>
+          <% else -%>
+            <span class="headerTitleNext">&nbsp;AIKIT </span>
+          <% end -%>
+        <% end -%>
+        <span class="headerTitleSub">&nbsp; version 0.1, Level <%= session[:level] %>&nbspof&nbsp[
+          <%= link_to "0", :id => 0, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "1", :id => 1, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "2", :id => 2, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "3", :id => 3, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "4", :id => 4, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "5", :id => 5, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "6", :id => 6, :controller => :llm_questions, :action => :level_set %>
+          <%= link_to "7", :id => 7, :controller => :llm_questions, :action => :level_set %>]&nbsp
+          <%= link_to "+", :id => 1, :controller => :llm_questions, :action => :level_plus %>
+          <%= link_to "-", :id => 1, :controller => :llm_questions, :action => :level_minus  %>
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>

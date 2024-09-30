@@ -43,9 +43,9 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   mkdir -p ${SINGULARITY_ROOTFS}/io/
 
 %files
-  dependencies/wgetrc /S/wgetrc
+# dependencies/wgetrc /S/wgetrc
   dependencies/llms_requirements.txt /S
-  AIKit_UI.tar /S
+  AIKIT_UI.tar /S
 
 %post
   export DEBIAN_FRONTEND=noninteractive
@@ -85,7 +85,7 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
   python3 get-pip.py
 
-  cp /S/wgetrc /etc
+# cp /S/wgetrc /etc
 
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs 
   chmod +x sh.rustup.rs 
@@ -143,8 +143,8 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   apt-get update
   apt-get install -y nvidia-container-toolkit
 
-  tar -xf AIKit_UI.tar
-  cd AIKit_UI
+  tar -xf AIKIT_UI.tar
+  cd AIKIT_UI
   bundle update
 
 %environment

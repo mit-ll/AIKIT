@@ -35,98 +35,92 @@
 # GNU General Public License for more details.
 ################################################################################
 
-require 'input_file'
+# require 'input_file'
 require 'json'
 require 'net/http'
 require 'open3'
-require 'output_file'
+# require 'output_file'
 require 'uri'
 
 class Ask
 
   ##############################################################################
-  def self.write_history( quest, llm, questions )
-    quest_name = "Q#{quest.id}.txt"
-    quest_file = OutputFile.new( "TEMP/#{quest_name}" )
-    quest_file.open_file()
-    hist_name = "H#{quest.id}.txt"
-    hist_file = OutputFile.new( "TEMP/#{hist_name}" )
-    hist_file.open_file()
-    chain_gap = false
+  def self.write_chain( quest, llm, questions, llm_params )
+    llm_params["llm_model"] = llm.llm_name
+    llm_params["chain"] = {}
     questions.each do |q|
-      if chain_gap || q.chain_id <= quest.chain_order
-        resp = Response.where( question_id: q.id, llm_id: llm.id, chain_order: q.chain_order ).take
-        if resp.nil?
-          quest_file.write( "#{q.question_text}\n" )
-          chain_gap = true
-        else
-          response = resp.response_text.gsub( "\n", " " )
-          hist_file.write( "#{q.question_text}\t#{response}\n" )
-        end  # if
-      else
-        quest_file.write( "#{q.question_text}\n" )
+      llm_params["chain"][q.chain_order] = {}
+      llm_params["chain"][q.chain_order]["input"] = "\"#{q.question_text}\""
+      resp = Response.where( question_id: q.id, llm_id: llm.id, chain_order: q.chain_order ).take
+      if ! resp.nil?
+        resp_text = response.response_text.gsub( "\n", " " ) 
+        llm_params["chain"][q.chain_order]["AI"] = "\"#{resp_text}\""
       end  # if
     end  # do
-    quest_file.close_file()
-    hist_file.close_file()
-    return quest_name, hist_name
-  end  # write_history
+    return llm_params
+  end  # write_chain
 
   ##############################################################################
-  def self.write_template( quest )
+  def self.write_template( quest, llm_params )
     template = nil
     template = Template.where( id: quest.template_id ).take if ! quest.template_id.nil?
-    template_name = "T#{quest.id}.txt"
-    temp_file = OutputFile.new( "TEMP/#{template_name}" )
-    temp_file.open_file()
-    temp_file.write( "#{template.template_text}\n" ) if ! template.nil?
-    temp_file.close_file()
-
-    return template_name
+    llm_params["template"] = template.template_text if ! template.nil?
   end  # write_template
 
   ##############################################################################
   def self.run_chain( quest, llm, questions )
-    template_name = Ask::write_template( quest )
-    quest_name, hist_name = Ask::write_history( quest, llm, questions )
+    llm_params = {}
+    llm_params["llm_model"] = llm.llm_name
+    Ask::write_template( quest, llm_params )
+    llm_params = Ask::write_history( quest, llm, questions, llm_params )
+
     results_name = "R#{quest.id}.txt"
 
-    cmd = "python3 lang_chain.py token.txt \"#{llm.llm_name}\" TEMP/#{template_name} TEMP/#{quest_name} TEMP/#{hist_name} TEMP/#{results_name}"
+    File.write( "TEMP/llm_#{quest.id}.json", llm_params.to_json )
+    cmd = "python3 llms_json.py TEMP/llm_#{quest.id}.json > TEMP/O_#{quest.id}.json"
     puts "***** lang_chain command: #{cmd}"
     stdout, stderr, status = Open3.capture3("#{cmd}")
-    str = Ask::clean_response( stdout )
     puts "**** stdout: #{stdout}"
     puts "**** stderr: #{stderr}"
     puts "**** status: #{status}"
 
-    results = InputFile.new( "TEMP/#{results_name}" )
-    results.open_file()
-    pairs_text = results.read_lines()
-    results.close_file()
+    results = File.open( "TEMP/O_#{quest.id}.json" )
+    llm_results = JSON.load results
+    results.close
 
     if status == 0
-      return pairs_text
+      return stderr, llm_results
     else
       puts "**** Something went wrong" 
-      return pairs_text
+      return stderr, llm_results
     end  # if
   end  # run_chain
 
   ##############################################################################
   def self.run_local( quest, llm )
-    cmd = "python3 llms_cli.py \"#{llm.llm_name}\" \"#{quest.question_text}\""
+    # Note: JSON input file
+    llm_params = {}
+    llm_params["llm_model"] = llm.llm_name
+    llm_params["questions"] = ["\"#{quest.question_text}\""]
+    Ask::write_template( quest, llm_params )
+    File.write( "TEMP/llm_#{quest.id}.json", llm_params.to_json )
+    cmd = "python3 llms_json.py TEMP/llm_#{quest.id}.json > TEMP/O_#{quest.id}.json"
     puts "***** Docker command: #{cmd}"
     stdout, stderr, status = Open3.capture3("#{cmd}")
-    str = Ask::clean_response( stdout )
+    # str = Ask::clean_response( stdout )
     puts "**** stdout: #{stdout}"
-    puts "**** str: #{str}"
     puts "**** stderr: #{stderr}"
     puts "**** status: #{status}"
+
+    results = File.open( "TEMP/O_#{quest.id}.json" )
+    llm_results = JSON.load results
+    results.close
+
     if status == 0
-      return stderr, str
+      return stderr, llm_results
     else
       puts "**** Something went wrong" 
-      return stderr, str
+      return stderr, llm_results
     end  # if
   end  # run_local
 
@@ -137,12 +131,31 @@ class Ask
     collection = Collection.where( id: collection_id ).take
     llm_params = {}
     llm_params[ "llm_model" ] = llm.llm_name
-    llm_params[ "question" ] = query.question_text
+
+    if query.chain_id.nil?
+      llm_params[ "questions" ] = ["\"#{query.question_text}\""]
+    else
+      # Write out the questions chain and any responses for this LLM.
+      questions_chain = LlmQuestion.where(chain_id: query.chain_id).order(:chain_order).to_a
+      llm_params["chain"] = {}
+      questions_chain.each do |question_chain|
+        llm_params["chain"][question_chain.chain_order] = {}
+        llm_params["chain"][question_chain.chain_order]["question"] =  question_chain.question_text
+      end  # do
+
+      responses_chain = Response.where(chain_id: query.chain_id, llm_id: llm.id).order(:chain_order).to_a
+      responses_chain.each do |response_chain|
+        llm_params["chain"][response_chain.chain_order]["AI"] = "\"#{response_chain.response_text}\""
+      end  # do
+    end  # if
+
     llm_params[ "collection" ] = collection.collection_name
     llm_params[ "vector_store" ] = collection.vector_name
-    llm_params[ "prompt_template" ] = template.template_text
-    llm_params[ "prompt_input" ]    = template.prompt_input
-    llm_params[ "input_variables" ] = template.input_variables.split( " " )
+    if ! template.nil?
+      llm_params[ "prompt_template" ] = template.template_text
+      llm_params[ "prompt_input" ]    = template.prompt_input
+      llm_params[ "input_variables" ] = template.input_variables.split( " " )
+    end  # if
 
     llm_params[ "llm_params" ] = {}
     llm_params[ "llm_params" ][ "do_sample" ] = "True"
@@ -173,21 +186,21 @@ class Ask
   def self.run_llm_rag( temp_id, llm_rag_params )
     File.write( "TEMP/rag_#{temp_id}.json", llm_rag_params.to_json )
     
-    stdout, stderr, status = Open3.capture3( "python3 llm_rag_query.py TEMP/rag_#{temp_id}.json > TEMP/O_#{temp_id}.txt" )
+    stdout, stderr, status = Open3.capture3( "python3 llm_rag_lc.py TEMP/rag_#{temp_id}.json > TEMP/O_#{temp_id}.json" )
     puts ">>> stdout: #{stdout}"
     puts ">>> stderr: #{stderr}"
     puts ">>> status: #{status}"
 
-    results = InputFile.new( "TEMP/O_#{temp_id}.txt" )
-    results.open_file()
-    rag_text = results.read_lines()
-    results.close_file()
+    results = File.open( "TEMP/O_#{temp_id}.json" )
+    rag_results = JSON.load results
+    results.close
+    puts "**** rag_results: #{rag_results}"
 
-    if status == 0
+    # if status == 0
       # File.unlink("TEMP/rag_#{temp_id}.json") if File.exists?("TEMP/rag_#{temp_id}.json")
-    end  # if
+    # end  # if
 
-    return stderr, rag_text.join( "\n" )
+    return stderr, rag_results
   end  # run_llm_rag
 
   ##############################################################################
@@ -200,8 +213,12 @@ class Ask
         return Ask::run_local( query, llm )
       end  # if
     else
-      llm_rag_params = Ask::llm_params( query, llm, collection_id, parameter_set_id )
-      return Ask::run_llm_rag( temp_id, llm_rag_params )
+      if query.template_id.nil?
+        return Ask::run_local( query, llm )
+      else
+        llm_rag_params = Ask::llm_params( query, llm, collection_id, parameter_set_id )
+        return Ask::run_llm_rag( temp_id, llm_rag_params )
+      end  # if
     end  # if
   end  # ask_llm_question
 

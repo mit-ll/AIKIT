@@ -1,0 +1,26 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Parameter Sets</h1>
+
+<div id="parameter_sets">
+  <table class="display compact dataTable" id="example" border="1">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Set type</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @parameter_sets.each do |parameter_set| %>
+        <tr>
+          <td><%= parameter_set.set_name %></td>
+          <td><%= parameter_set.set_type %></td>
+          <td><%= link_to "Show", parameter_set %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+
+<%= link_to "New parameter set", new_parameter_set_path %>

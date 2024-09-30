@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @difference %>
+
+<div>
+  <%= link_to "Back to differences", differences_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this difference", edit_difference_path(@difference) %>
+    <%= button_to "Destroy this difference", @difference, method: :delete %>
+  <% end -%>
+</div>

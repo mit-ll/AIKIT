@@ -44,10 +44,13 @@ MIME_TYPES = {".csv" => "text/csv",
     ".gz" => "application/gzip",
     ".htm" => "text/html",
     ".html" => "text/html",
+    ".mp3" => "audio/mpeg",
+    ".mp4" => "video/mp4",
     ".ppt" => "application/vnd.ms-powerpoint",
     ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ".rtf" => "application/rtf",
     ".tar" => "application/x-tar",
+    ".wav" => "audio/wav",
     ".xhtml" => "application/xhtml+xml",
     ".xls" => "application/vnd.ms-excel",
     ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -74,11 +77,11 @@ def folder_setup()
 end  # folder_setup
 
 ###############################################################################
-def load_file( user_id, folder_id, file_path, filename )
+def load_file( user_id, folder_id, file_path, filename, top_folder )
   if filename.end_with?( ".pdf" )
-    doc_id = load_pdf( user_id, folder_id, file_path, filename )
+    doc_id = load_pdf( user_id, folder_id, file_path, filename, top_folder )
   else
-    doc_id = load_other( user_id, folder_id, file_path, filename )
+    doc_id = load_other( user_id, folder_id, file_path, filename, top_folder )
   end  # if
 
   # Copy the file to public for viewing
@@ -105,7 +108,7 @@ def dup_file( file_path, filename, doc_id )
 end  # dup_file
 
 ###############################################################################
-def load_pdf( user_id, folder_id, pdf_path, filename )
+def load_pdf( user_id, folder_id, pdf_path, filename, top_folder )
   puts "#{pdf_path}/#{filename}"
 
   pdfname = File.join(pdf_path, filename)
@@ -144,6 +147,7 @@ def load_pdf( user_id, folder_id, pdf_path, filename )
   new_doc.user_id = user_id
   new_doc.filename = filename
   new_doc.file_type = "PDF"
+  new_doc.top_folder = top_folder
   new_doc.document_type = "PDF"
   new_doc.content_type = "application/pdf"
   new_doc.is_parsed = true
@@ -170,7 +174,7 @@ def content_type( filename )
 end  #  content_type
 
 ###############################################################################
-def load_other( user_id, folder_id, pathfile, filename )
+def load_other( user_id, folder_id, pathfile, filename, top_folder )
   puts "#{pathfile} :: #{filename}"
 
   txtname = Tools::clean_field( filename.sub(".file", ".txt") )
@@ -200,6 +204,7 @@ def load_other( user_id, folder_id, pathfile, filename )
   new_doc.previous_id = old_doc.id if ! old_doc.nil?
   new_doc.user_id = user_id
   new_doc.filename = filename
+  new_doc.top_folder = top_folder
   if file_type.length > 0
     new_doc.file_type = file_type[1..-1]
     new_doc.document_type = file_type[1..-1]
@@ -249,7 +254,7 @@ def find_or_create( user_id, parent_folder_id, folder_name, folder_level, path_n
 end  # find_or_create
 
 ###############################################################################
-def load_dir( user_id, parent_folder_id, dir_path, start, folder_level )
+def load_dir( user_id, parent_folder_id, dir_path, start, folder_level, top_folder )
   Dir.foreach( start ) do |x|
     path = File.join(start, x)
     if x == "." or x == ".." or x == ".DS_Store"
@@ -258,9 +263,9 @@ def load_dir( user_id, parent_folder_id, dir_path, start, folder_level )
       # puts "Dir:: " + path + "/"
       folder_id = find_or_create( user_id, parent_folder_id, x, folder_level+1, dir_path )
       sub_dir_path = dir_path + "/" + x
-      load_dir( user_id, folder_id, sub_dir_path, path, folder_level+1 )
+      load_dir( user_id, folder_id, sub_dir_path, path, folder_level+1, top_folder )
     else
-      load_file( user_id, parent_folder_id, start, x )
+      load_file( user_id, parent_folder_id, start, x, top_folder )
       # puts "#{dir_path} :: #{x}"
     end  # if
   end  # foreach
@@ -280,7 +285,7 @@ def load_pdfs_main()
   parent_folder_id = find_or_create( user.id, nil, "/", folder_level, "" )
   folder_level += 1
   top_folder_id = find_or_create( user.id, parent_folder_id, folder_name, folder_level, "/" )
-  load_dir( user.id, top_folder_id, "/#{folder_name}", folder_name, folder_level )
+  load_dir( user.id, top_folder_id, "/#{folder_name}", folder_name, folder_level, folder_name )
 end  # load_pdfs_main
 
 ###############################################################################

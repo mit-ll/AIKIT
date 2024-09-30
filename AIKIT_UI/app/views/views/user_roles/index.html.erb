@@ -1,0 +1,26 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>User roles</h1>
+
+<div id="user_roles">
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Select</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @user_roles.each do |user_role| -%>
+        <tr>
+          <td><%= user_role.role_name %></td>
+          <td><%= link_to "Select", select_user_role_path(user_role) %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+<% if session[:role] == "admin" %>
+  <br/>
+  <%= link_to "New user role", new_user_role_path %>
+<% end -%>

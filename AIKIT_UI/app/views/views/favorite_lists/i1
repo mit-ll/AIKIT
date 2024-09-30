@@ -1,0 +1,19 @@
+
+<div id="favorite_lists">
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @favorite_lists.each do |favorite_list| -%>
+        <tr>
+          <td><%= favorite_list.list_name %></td>
+          <td><%= link_to "Show", favorite_list %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>

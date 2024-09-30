@@ -40,6 +40,8 @@ class InitialData < ActiveRecord::Migration[7.0]
   def change
     ricke = User::create(user_name: "Darrell Ricke", user_sid: "ricke")
     guest = User::create(user_name: "Guest", user_sid: "guest")
+    
+    mitll_group = Group::create(group_name: "Group")
 
     mistral3      = Llm::create(llm_name: "mistralai/Mistral-7B-v0.3")
 #   mistral3i     = Llm::create(llm_name: "mistralai/Mistral-7B-Instruct-v0.3")
@@ -47,7 +49,7 @@ class InitialData < ActiveRecord::Migration[7.0]
     mistral_8x7B  = Llm::create(llm_name: "mistralai/Mixtral-8x7B-v0.1")
 #   mistral_8x7Bi = Llm::create(llm_name: "mistralai/Mixtral-8x7B-Instruct-v0.1")
 
-    mixtral_8x22B = Llm::create(llm_name: "mistralai/Mixtral-8x22B-v0.1")
+#   mixtral_8x22B = Llm::create(llm_name: "mistralai/Mixtral-8x22B-v0.1")
 #   mixtral_8x22Bi = Llm::create(llm_name: "mistralai/Mixtral-8x22B-Instruct-v0.1")
 
     llama3_8b     = Llm::create(llm_name: "meta-llama/Meta-Llama-3-8B")
@@ -56,8 +58,15 @@ class InitialData < ActiveRecord::Migration[7.0]
     llama3_70B    = Llm::create(llm_name: "meta-llama/Meta-Llama-3-70B")
 #   llama3_70Bi   = Llm::create(llm_name: "meta-llama/Meta-Llama-3-70B-Instruct")
 
+    Llm::create(llm_name: "meta-llama/Meta-Llama-3.2-1B")
+    Llm::create(llm_name: "meta-llama/Meta-Llama-3.2-3B")
+#   Llm::create(llm_name: "meta-llama/Meta-Llama-3.2-11B")
+#   Llm::create(llm_name: "meta-llama/Meta-Llama-3-8B")
+
     Llm::create(llm_name: "Qwen/Qwen2-7B-Instruct")
     Llm::create(llm_name: "Qwen/Qwen2-72B")
+
+    Llm::create(llm_name: "microsoft/Phi-3.5-mini-instruct")
 
     admin = Role::create( role_name: "admin" )
     instructor = Role::create( role_name: "instructor" )
@@ -82,12 +91,14 @@ class InitialData < ActiveRecord::Migration[7.0]
     Parameter::create( user_id: guest.id, parameter_set_id: faiss_set.id, parameter_name: "chunk_size", parameter_value: "1000" )
     Parameter::create( user_id: guest.id, parameter_set_id: faiss_set.id, parameter_name: "chunk_overlap", parameter_value: "10" )
 
-    chroma_set = ParameterSet::create( user_id: guest.id,  set_name: "LLM RAG chroma set2", set_type: "RAG" )
-    Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "emb_model_name", parameter_value: "all-MiniLM-L6-v2" )
-    Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "max_new_tokens", parameter_value: "1024" )
-    Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "chunk_size", parameter_value: "1000" )
-    Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "chunk_overlap", parameter_value: "10" )
+    # chroma_set = ParameterSet::create( user_id: guest.id,  set_name: "LLM RAG chroma set2", set_type: "RAG" )
+    # Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "emb_model_name", parameter_value: "all-MiniLM-L6-v2" )
+    # Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "max_new_tokens", parameter_value: "1024" )
+    # Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "chunk_size", parameter_value: "1000" )
+    # Parameter::create( user_id: guest.id, parameter_set_id: chroma_set.id, parameter_name: "chunk_overlap", parameter_value: "10" )
 
-    Template::create( user_id: guest.id, template_text: "Answer the following question based only on the provided context: <context> {context} </context> Question: {input}", prompt_input: "You are a teacher assessing whether or not your student knows the material in the context provided. Generate a question and answer pair that tests the student on the provided context. Provide the answer in the following format:\nQuestion: Provide the question here.\nAnswer: Provide the answer here. Make the answer as concise as possible.", input_variables: "context question" )
+    g_temp = Template::create( user_id: guest.id, template_text: "Answer the following question based only on the provided context: <context> {context} </context> Question: {input}", prompt_input: "Provide the answer in the following format:\nQuestion: Provide the question here.\nAnswer: Provide the answer here. Make the answer as concise as possible. List source document names here:\nSources:", input_variables: "context input" )
+
+    LlmQuestion::create( user_id: guest.id, template_id: g_temp.id, question_text: "Why is the sky the color blue?", question_name: "test", updated_at: Time::now)
   end
 end

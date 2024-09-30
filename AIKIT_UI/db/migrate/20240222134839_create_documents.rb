@@ -50,9 +50,10 @@ class CreateDocuments < ActiveRecord::Migration[7.0]
       t.integer :folder_id
       t.integer :previous_id
       t.integer :user_id
-      t.string :filename, limit: 160
+      t.string :filename, limit: 320
       t.string :pathname, limit: 160
       t.string :document_type, limit: 20
+      t.string :top_folder, limit: 160
       t.string :file_type, limit: 20
       t.string :content_type, limit: 80
       t.boolean :is_parsed

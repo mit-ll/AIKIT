@@ -1,6 +1,7 @@
 
 ################################################################################
 # Author: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
+#         Danielle Sullivan (email: Danielle.Sullivan@ll.mit.edu)
 #
 # RAMS request ID 1028809 
 # RAMS title: Artificial Intelligence tools for Knowledge-Intensive Tasks (AIKIT) 
@@ -39,7 +40,12 @@
 import json
 import os
 import os.path
+from pathlib import Path
 import sys
+
+import torch
+import soundfile
+from transformers import Speech2TextProcessor, Speech2TextForConditionalGeneration
 
 from langchain_community.vectorstores import FAISS
 from langchain_community.vectorstores import Chroma
@@ -58,13 +64,17 @@ from langchain_community.document_loaders import UnstructuredXMLLoader
 from langchain_community.document_loaders import S3FileLoader
 # https://python.langchain.com/v0.1/docs/integrations/document_loaders/aws_s3_directory/
 from langchain_community.document_loaders import S3DirectoryLoader
+from langchain_core.documents import Document
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain_huggingface import HuggingFaceEmbeddings     # causes pydantic etc. errors
 from langchain_community.embeddings.sentence_transformer import ( SentenceTransformerEmbeddings,)
 
 from InputFile import InputFile
+from extracted_image_loader import ExtractedImageLoader
+from image_captions import ImageCaptionLoader
 
 ################################################################################
 def read_file( filename ):
@@ -92,12 +102,36 @@ def read_file_list( filename ):
     return names
 
 ################################################################################
+def check_parameter( params, key, default ):
+    value = default
+    if key in params.keys():
+        value = params[ key ]
+    return value
+
+################################################################################
 def create_vector_store( params ):
-    doc_list = params["documents"]
-    vector_store = params["vector_store"]
-    collection = params["collection"]
-    chunk_size = int( params["rag_params"]["chunk_size"] )
-    chunk_overlap = int( params["rag_params"]["chunk_overlap"] )
+    extract_caption = True
+    if "extract_captions" in params.keys():
+        extract_caption = bool(params["extract_captions"])
+
+    persist_images = True
+    if "persist_images" in params.keys():
+        persist_images = bool(params["persist_images"])
+
+    image_dir = check_parameter( params, "image_dir", "temp" )
+    Path(image_dir).mkdir(parents=True, exist_ok=True)
+
+    doc_list = check_parameter( params, "documents", "test.list" )
+    vector_store = check_parameter( params, "vector_store", "FAISS" )
+    collection = check_parameter( params, "collection", "vs_default" )
+
+    chunk_size = 1024
+    chunk_overlap = 40
+    emb_model_name = "sentence-transformers/all-mpnet-base-vs"
+    if "rag_params" in params.keys():
+        chunk_size = int( check_parameter( params["rag_params"], "chunk_size", chunk_size ) )
+        chunk_overlap = int( check_parameter( params["rag_params"], "chunk_overlap", chunk_overlap ) )
+        emb_model_name = check_parameter( params["rag_params"], "emb_model_name", emb_model_name )
 
     files = read_file_list( doc_list )
     print(f'Documents list name: {doc_list}' )
@@ -108,18 +142,31 @@ def create_vector_store( params ):
     for f in files:
         print( f'File name: {f}' )
         if f.endswith( ".pdf" ) or f.endswith( ".PDF" ):
+            # Community PDF text loader
             loader = PyPDFLoader( f )
             doc = loader.load()
-            documents.extend(loader.load())
+            documents.extend(doc)
+            # Extract and load images
+            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            # doc = loader.load()
+            # documents.extend(doc)
+
         if f.endswith( ".txt"):
             loader = TextLoader( f )
             doc = loader.load()
             documents.extend( doc )
             txt_found = True
         if f.endswith( ".jpg" ) or f.endswith( ".png" ) or f.endswith( ".JPG" ) or f.endswith( ".PNG" ):
+            # OCR
             loader = UnstructuredImageLoader( f )
             doc = loader.load()
             documents.extend( doc )
+            # BLIP Caption
+            if extract_caption:
+                loader = ImageCaptionLoader(f)
+                doc = loader.load()
+                documents.extend( doc )
+
         if f.endswith( ".doc" ) or f.endswith( ".docx" ) or f.endswith( ".DOC" ) or f.endswith( ".DOCX" ):
             loader = UnstructuredWordDocumentLoader( f )
             doc = loader.load()
@@ -129,9 +176,15 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend( doc )
         if f.endswith( ".ppt" ) or f.endswith( ".pptx" ) or f.endswith( ".PPT" ) or f.endswith( ".PPTX" ):
+            # Community PPT text loader
             loader = UnstructuredPowerPointLoader( f )
             doc = loader.load()
             documents.extend( doc )
+            # Extract and load images
+            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            # doc = loader.load()
+            # documents.extend(doc)
+
         if f.endswith( ".xls" ) or f.endswith( ".xlsx" ) or f.endswith( ".XLS" ) or f.endswith( ".XLSX" ):
             loader = UnstructuredExcelLoader( f )
             doc = loader.load()
@@ -140,9 +193,24 @@ def create_vector_store( params ):
             loader = UnstructuredXMLLoader( file_path=f, mode="elements"  )
             doc = loader.load()
             documents.extend( doc )
+        if f.endswith( ".wav" ) or f.endswith( ".mp3" ):
+            speech_model = "facebook/s2t-small-librispeech-asr"
+            model = Speech2TextForConditionalGeneration.from_pretrained(speech_model)
+            processor = Speech2TextProcessor.from_pretrained(speech_model)
+            data, samplerate = soundfile.read(f)
+            # data, samplerate = librosa.load(f, sr=16000)
+            inputs = processor(data, sampling_rate=samplerate, return_tensors="pt")
+            generated_ids = model.generate(inputs["input_features"], attention_mask=inputs["attention_mask"])
+            transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)
+            print('--------------------------------')
+            print(f)
+            print(transcription[0])
+            trans_text = transcription[0]
+            doc = Document(page_content=trans_text, metadata={'source': f})
+            documents.extend( [doc] )
 
     if txt_found:
-        text_splitter = RecursiveCharacterTextSplitter()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     else:
         text_splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
@@ -151,12 +219,11 @@ def create_vector_store( params ):
     if vector_store == "FAISS":
         # Load chunked documents into the FAISS index
         db = FAISS.from_documents(chunked_documents,
-            HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2'))
+            HuggingFaceEmbeddings(model_name=emb_model_name))
 
         db.save_local( "FAISS_dbs/"+collection )
 
     else:    # chromadb
-        emb_model_name = "all-MiniLM-L6-v2"
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
         # db = Chroma(persist_directory="/io/"+collection, embedding_function=embedding_function)
         db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
@@ -169,4 +236,4 @@ if ( arg_count >= 2 ):
 
         create_vector_store( params )
 else:
-    print( 'python3 docs_to_vs.py <documents JSON>' )
+    print( 'python3 docs_to_vs.py <JSON parameters file>' )

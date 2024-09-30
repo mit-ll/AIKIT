@@ -36,7 +36,7 @@
 ################################################################################
 
 ###############################################################################
-def create_vs_main( collection_name, vs_param_set )
+def create_vs_main( collection_name, top_folder, vs_param_set )
   # Check if collection has been created already
   # collection = Collection.where( collection_name: collection_name ).take
   # return if ! collection.nil?
@@ -44,7 +44,7 @@ def create_vs_main( collection_name, vs_param_set )
   user = User.where( user_sid: "guest" ).take
 
   # Get all of the document ids
-  docs = Document.all
+  docs = Document.where( top_folder: top_folder ).to_a
   doc_ids = []
   docs.each do |doc|
     doc_ids << doc.id
@@ -60,4 +60,4 @@ def create_vs_main( collection_name, vs_param_set )
 end  # create_vs_main
 
 ###############################################################################
-create_vs_main( "GAINS_all", "LLM RAG FAISS set1" )
+create_vs_main( ARGV[0], ARGV[1], "LLM RAG FAISS set1" )

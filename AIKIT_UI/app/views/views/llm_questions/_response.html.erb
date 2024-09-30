@@ -1,0 +1,49 @@
+<div>
+  <table border="2">
+    <thead>
+      <tr>
+        <th>LLM</th>
+        <% if session[:level] >= 1 -%>
+          <th>Vector Store</th>
+          <th>Collection</th>
+        <% end -%>
+        <th>Created at</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr align="center">
+        <td><%= @llm_names[ response.llm_id ] if ! @llm_names.nil? %></td>
+        <% if session[:level] >= 1 -%>
+          <td><%= @collections_hash[ response.collection_id ].vector_name if ! response.collection_id.nil?%></td>
+          <td><%= @collections_hash[ response.collection_id ].collection_name if ! response.collection_id.nil? %></td>
+        <% end -%>
+        <td><%= response.created_at.strftime('%Y-%m-%d') %></td>
+    </tr>
+    </tbody>
+  </table>
+  <pre>
+  <%= response.response_text %>
+  </pre>
+</div>
+<% sources = Source.where(response_id: response.id).order(:source_order).to_a -%>
+<% if sources.size > 0 -%>
+  <% sources.each do |source| -%>
+    <table border="2">
+      <thead></thead>
+      <tbody>
+        <tr>
+          <td>Source: <%= Tools::doc_name(source.document_name) %></td>
+        </tr>
+        <% if ! source.page.nil? -%>
+          <tr>
+            <td>Page: <%= source.page %></td>
+          </tr>
+        <% end -%>
+        <tr>
+          <td><%= source.page_content %></td>
+        </tr>
+      </tbody>
+    </table>
+    <br/>
+  <% end -%>
+<% end -%>

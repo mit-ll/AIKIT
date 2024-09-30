@@ -1,0 +1,73 @@
+<div id="<%= dom_id user_question %>">
+  <br/>
+  <table border="2">
+    <thead></thead>
+    <tbody>
+      <tr>
+        <td>Test</td>
+        <td><%= @test_set.mqf_name if ! @test_set.nil? %></td>
+      </tr><tr>
+        <td>Topic</td>
+        <td><%= @topic.topic_text if ! @topic.nil? %></td>
+      </tr><tr>
+        <td>Question</td>
+        <td><%= @test_question.question %></td>
+      </tr><tr>
+        <td>Reference</td>
+        <td><%= @test_question.reference %></td>
+      </tr><tr>
+        <td>Paragraph</td>
+        <td><%= @test_question.paragraph %></td>
+      </tr><tr>
+        <td>A</td>
+        <td><%= @test_question.option_a %></td>
+      </tr><tr>
+        <td>B</td>
+        <td><%= @test_question.option_b %></td>
+      </tr>
+      <% if ! @test_question.option_c.nil? && @test_question.option_c.length > 0 -%>
+        <tr>
+          <td>C</td>
+          <td><%= @test_question.option_c %></td>
+        </tr>
+      <% end -%>
+      <% if ! @test_question.option_d.nil? && @test_question.option_d.length > 0 -%>
+        <tr>
+          <td>D</td>
+          <td><%= @test_question.option_d %></td>
+        </tr>
+      <% end -%>
+        <% if ! @test_question.option_e.nil? && @test_question.option_e.length > 0 -%>
+        <tr>
+          <td>E</td>
+          <td><%= @test_question.option_e %></td>
+        </tr>
+      <% end -%>
+      <% if ! @test_question.option_f.nil? -%>
+        <tr>
+          <td>F</td>
+          <td><%= @test_question.option_f %></td>
+        </tr>
+      <% end -%>
+      <tr></tr>
+      <div>
+        <td>Answer</td>
+        <td><%= @user_question.user_answer %></td>
+      </div>
+      <tr></tr>
+      <div>
+        <td>User Score of this question</td>
+        <td><%= @user_question.question_score %></td>
+      </div>
+      <tr></tr>
+      <div>
+        <td>Comment</td>
+        <td><%= @user_question.user_comment %></td>
+      </div>
+      </tr><tr>
+        <td><strong>Test date:</strong></td>
+        <td><%= @user_question.test_date.strftime('%Y-%m-%d') %></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,29 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Test questions</h1>
+
+<div id="test_questions">
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <th>Document</th>
+        <th>#</th>
+        <th>Question</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @test_questions.each do |test_question| -%>
+        <tr>
+          <% document = @documents[ test_question.document_id ] if ! test_question.document_id.nil? -%>
+          <td><%= document.filename if ! document.nil? %></td>
+          <td><%= test_question.question_number %></td>
+          <td><%= test_question.question %></td>
+          <td><%= link_to "Show", test_question %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+
+<%= link_to "Add test question", new_test_question_path %>

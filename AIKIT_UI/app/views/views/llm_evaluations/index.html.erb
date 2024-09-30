@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Llm evaluations</h1>
+
+<div id="llm_evaluations">
+  <% @llm_evaluations.each do |llm_evaluation| %>
+    <%= render llm_evaluation %>
+    <p>
+      <%= link_to "Show this llm evaluation", llm_evaluation %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New llm evaluation", new_llm_evaluation_path %>

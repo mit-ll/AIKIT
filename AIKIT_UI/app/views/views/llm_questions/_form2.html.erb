@@ -1,0 +1,33 @@
+<%= form_with(model: llm_question) do |form| %>
+  <% if llm_question.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(llm_question.errors.count, "error") %> prohibited this LLM question from being saved:</h2>
+
+      <ul>
+        <% llm_question.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <table>
+      <thead></thead>
+      <tbody>
+        <tr>
+          <td>Add LLM question(s) - one per line</td>
+        </tr><tr>
+          <td>Chain questions? <%= check_box_tag("chain", value=true, checked= false ) %></td>
+        </tr><tr>
+          <td><%= form.text_area :question_text, :size => "120x10" %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <br/>
+  <%= hidden_field_tag(:llm_question_id, selected_llm_question.id ) %>
+  <div>
+    <%= form.submit "Add LLM question(s)" %>
+  </div>
+<% end -%>

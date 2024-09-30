@@ -49,13 +49,27 @@ Retrieval-Augmented Generation (RAG), and Ruby-on-Rails web interface.
 
 **To build:**
 
+  Update the AIKIT_UI/Gemfile for the 3.0.2 version of Ruby by commenting out the Docker version and uncommenting the 3.0.2 version.
+
+  tar -cf AIKIT_UI.tar AIKIT_UI
+
   singularity build aikit.sif aikit.def
+
+  -or-
+
+  apptainer build aikit.sif aikit.def
+
 
 **Singularity AIKIT Rails interface example:**
 
   Place LLM models in io/hub
 
   singularity run --nv -B io/:/io/ aikit.sif "rails s -b 0.0.0.0"
+
+  -or-
+
+  apptainer run --nv -B io/:/io/ aikit.sif "rails s -b 0.0.0.0"
+  
   
   AIKIT web interface on port 3000 on hosting server
 

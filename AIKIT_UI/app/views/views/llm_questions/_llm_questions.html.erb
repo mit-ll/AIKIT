@@ -1,0 +1,26 @@
+<div id="questions">
+  <table class="display compact dataTable" id="example" border="1">
+    <thead>
+      <tr>
+        <th>Chain</th>
+        <th>LLM Question</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @llm_questions.each do |llm_question| -%>
+        <% if @selected_llm_question.nil? || llm_question.id != @selected_llm_question.id -%>
+          <tr>
+            <td>
+               <% if ! llm_question.chain_id.nil? -%>
+                <%= llm_question.chain_id %>.<%= llm_question.chain_order %>
+               <% end -%>
+            </td>
+            <td><%= llm_question.question_text %></td>
+            <td><%= link_to "Show", llm_question %>
+          </tr>
+        <% end -%>
+      <% end -%>
+    </tbody>
+  </table>
+</div>

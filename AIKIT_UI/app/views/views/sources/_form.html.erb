@@ -1,0 +1,57 @@
+<%= form_with(model: source) do |form| %>
+  <% if source.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(source.errors.count, "error") %> prohibited this source from being saved:</h2>
+
+      <ul>
+        <% source.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :user_id, style: "display: block" %>
+    <%= form.number_field :user_id %>
+  </div>
+
+  <div>
+    <%= form.label :llm_question_id, style: "display: block" %>
+    <%= form.number_field :llm_question_id %>
+  </div>
+
+  <div>
+    <%= form.label :response_id, style: "display: block" %>
+    <%= form.number_field :response_id %>
+  </div>
+
+  <div>
+    <%= form.label :source_order, style: "display: block" %>
+    <%= form.number_field :source_order %>
+  </div>
+
+  <div>
+    <%= form.label :document_name, style: "display: block" %>
+    <%= form.text_field :document_name %>
+  </div>
+
+  <div>
+    <%= form.label :page, style: "display: block" %>
+    <%= form.number_field :page %>
+  </div>
+
+  <div>
+    <%= form.label :score, style: "display: block" %>
+    <%= form.text_field :score %>
+  </div>
+
+  <div>
+    <%= form.label :page_content, style: "display: block" %>
+    <%= form.text_area :page_content %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

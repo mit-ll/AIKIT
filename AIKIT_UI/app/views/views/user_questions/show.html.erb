@@ -1,0 +1,17 @@
+<p style="color: green"><%= notice %></p>
+
+<br/>
+<h3>Question <%= @test_question.question_number %></h3>
+
+  <% if ! @test_question.previous_id.nil? -%>
+    <%= link_to "Previous", id: @test_question.previous_id %> |
+  <% end -%>
+  <% if ! @test_question.next_id.nil? -%>
+    <%= link_to "Next", id: @test_question.next_id %>
+  <% end -%>
+
+<%= render @user_question, locals: {user_question: @user_question, test_question: @test_question, test_set: @test_set, topic: @topic} %>
+
+<div>
+  <%= link_to "Edit Answer", edit_user_question_path(@user_question) %>
+</div>

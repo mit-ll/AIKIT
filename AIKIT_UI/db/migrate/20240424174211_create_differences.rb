@@ -50,7 +50,7 @@ class CreateDifferences < ActiveRecord::Migration[7.0]
       t.integer :folder_id
       t.integer :docuent1_id
       t.integer :document2_id
-      t.string :filename, limit: 160
+      t.string :filename, limit: 320
       t.string :file_type, limit: 40
       t.boolean :is_parsed
       t.boolean :is_public

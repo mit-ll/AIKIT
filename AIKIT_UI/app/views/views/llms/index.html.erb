@@ -1,0 +1,28 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Llms</h1>
+
+<div id="llms">
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <th>LLM</th>
+        <th>Version</th>
+        <th>Updated</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @llms.each do |llm| -%>
+        <tr>
+          <td><%= llm.llm_name %></td>
+          <td><%= llm.llm_version %></td>
+          <td><%= llm.updated_at.strftime('%Y-%m-%d') %></td>
+          <td><%= link_to "Show", llm %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+
+<%= link_to "New llm", new_llm_path %>

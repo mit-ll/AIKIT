@@ -101,6 +101,14 @@ end  # clip
   end  # array_cat
   
 #############################################################################
+# This function removes "public/doc<3>_ from source document names.
+  def self.doc_name( filename )
+    underscore = filename.index('_')
+    return filename[(underscore+1)..-1] if ! underscore.nil? && underscore >= 0 && underscore < filename.size-1
+    return filename
+  end  # doc_name
+
+#############################################################################
   def self.hash_dump(hash)
     hash.each do |key,value|
       puts "hash key: #{key} = #{value}"

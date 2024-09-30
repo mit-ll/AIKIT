@@ -1,0 +1,32 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>User qualifications</h1>
+
+<div id="user_qualifications">
+  <table cellpadding="2" class="display compact dataTable" id="example">
+    <thead>
+      <tr>
+        <th>Qualification</th>
+        <th>Code</th>
+        <th>Experience level</th>
+        <th>Date qualified</th>
+        <th>Updated training</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @user_qualifications.each do |user_qualification| -%>
+        <tr>
+          <td><%= @qualifications[ user_qualification.qualification_id ].qualification_name %></td>
+          <td><%= @qualifications[ user_qualification.qualification_id ].qualification_code %></td>
+          <td><%= user_qualification.experience_level %></td>
+          <td><%= user_qualification.date_qualified %></td>
+          <td><%= user_qualification.updated_training %></td>
+          <td><%= link_to "Show", user_qualification %></td>
+        </tr>
+      <% end -%>
+    </tbody>
+  </table>
+</div>
+
+<%= link_to "New user qualification", new_user_qualification_path %>

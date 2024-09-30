@@ -1,0 +1,43 @@
+<div id="<%= dom_id test_set %>">
+
+<table border="2">
+  <thead></thead>
+  <tbody>
+  <tr>
+    <td><strong>User:</strong></td>
+    <td><%= @user.user_name if ! @user.nil? %></td>
+  </tr>
+
+  <tr>
+    <td><strong>MQF name:</strong></td>
+    <td><%= test_set.mqf_name %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Squadron:</strong></td>
+    <td><%= test_set.squadron %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Source:</strong></td>
+    <td><%= test_set.source %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Number questions:</strong></td>
+    <td><%= test_set.number_questions %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Created at:</strong></td>
+    <td><%= test_set.created_at.strftime('%Y-%m-%d') %></td>
+  </tr>
+
+  <tr>
+    <td><strong>Updated at:</strong></td>
+    <td><%= test_set.updated_at.strftime('%Y-%m-%d') %></td>
+  </tr>
+
+  </tbody>
+</table>
+</div>

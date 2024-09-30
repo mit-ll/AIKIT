@@ -1,0 +1,15 @@
+<p style="color: green"><%= notice %></p>
+
+<br/>
+<% docname = Tools::clean_name( @document.filename ) -%>
+
+<% if @document.content_type == "audio/wav" || @document.content_type == "audio/mpeg" %>
+  <%= audio_tag("/doc#{@document.id}_#{docname}", autoplay: false, controls: true) %>
+<% else -%>
+  <iframe src=<%= "/doc#{@document.id}_#{docname}" %> width="640" height="680" style="border: none;"></iframe>
+<% end -%>
+
+<div>
+  <%= link_to "Back", documents_path %>
+</div>
+

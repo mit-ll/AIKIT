@@ -59,6 +59,7 @@ class CreateResponses < ActiveRecord::Migration[7.0]
       t.datetime :runtime
       t.datetime :created_at
       t.text :response_text
+      t.text :context
     end
   end
 

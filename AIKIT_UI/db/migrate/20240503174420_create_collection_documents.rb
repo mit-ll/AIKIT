@@ -50,7 +50,7 @@ class CreateCollectionDocuments < ActiveRecord::Migration[7.0]
       t.integer :user_id
       t.integer :collection_id
       t.integer :document_id
-      t.string  :filename, limit: 160
+      t.string  :filename, limit: 320
       t.datetime :updated_at
     end
   end

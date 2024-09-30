@@ -144,7 +144,23 @@ class LlmQuestion < ApplicationRecord
       rag_params[k] = v
     end  # do
 
-    rag_params["question"] = self.question_text
+    if self.chain_id.nil?
+      rag_params["questions"] = [self.question_text]
+    else
+      # Write out the questions chain and any responses for this LLM.
+      questions_chain = LlmQuestion.where(chain_id: self.chain_id).order(:chain_order).to_a
+      rag_params["questions"] = []
+      questions_chain.each do |question_chain|
+        rag_params["questions"] +=  question_chain.question_text
+      end  # do
+
+      responses_chain = Response.where(chain_id: self.chain_id, llm_id: llm_id).order(:chain_order).to_a
+      rag_params["responses"] = []
+      responses_chain.each do |response_chain|
+        rag_params["responses"] += response_chain.response_text
+      end  # do
+    end  # if
+
     template = Template.where( id: self.template_id ).take
     rag_params["prompt_template"] = template.template_text
     rag_params["prompt_input"] = template.prompt_input
@@ -156,9 +172,6 @@ class LlmQuestion < ApplicationRecord
     json_file = File.open("TEMP/llm_#{self.id}.json", "w")
     json_file.write( rag_params )
     json_file.close
-
-    # Run the LLM RAG question on the LLM plus collection.
-
   end  # llm_rag_question
 
   ##############################################################################

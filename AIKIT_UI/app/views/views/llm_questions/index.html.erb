@@ -1,0 +1,6 @@
+<p style="color: green"><%= notice %></p>
+<h1>LLM Questions</h1>
+<%= render "llm_questions", llm_questions: @llm_questions, selected_llm_question: nil %>
+<br/>
+<%= link_to "New question", new_llm_question_path %>
+<%= link_to "Download Questions & Responses", all_llm_question_path(0), :method => :all, :action => :all %></td>

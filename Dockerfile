@@ -75,7 +75,7 @@ WORKDIR /S
 RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
     && python3 get-pip.py
 
-COPY dependencies/wgetrc /etc
+# COPY dependencies/wgetrc /etc
 WORKDIR /S
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs \
@@ -99,8 +99,7 @@ RUN pip install transformers \
     && pip install langgraph \
     && pip install scipy \
     && pip install einops \
-    && pip install bitsandbytes \
-    && pip install accelerate
+    && pip install bitsandbytes 
 
 RUN git clone https://github.com/facebookresearch/llama.git
 WORKDIR /S/llama
@@ -139,6 +138,8 @@ RUN pip install sentence-transformers \
     && pip install tf-keras \
     && pip install tensorrt
 
+RUN pip install accelerate --upgrade
+
 WORKDIR /S
 
 ENV HF_HOME=/io
@@ -146,8 +147,9 @@ ENV HF_HUB_CACHE=/io/hub
 ENV HF_ASSETS_CACHE=/io/assets
 
 WORKDIR /S
-COPY AIKit_UI.tar /S
-RUN tar -xf AIKit_UI.tar
+# COPY AIKit_UI.tar /S
+# RUN tar -xf AIKit_UI.tar
+COPY AIKIT_UI /S
 WORKDIR /S/AIKit_UI
 RUN bundle update
 # RUN rails db:migrate VERSION=0

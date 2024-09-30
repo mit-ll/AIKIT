@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @user_qualification %>
+
+<div>
+  <%= link_to "Back to user qualifications", user_qualifications_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this user qualification", edit_user_qualification_path(@user_qualification) %>
+    <%= button_to "Destroy this user qualification", @user_qualification, method: :delete %>
+  <% end -%>
+</div>
