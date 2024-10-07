@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /S/GAINS_UI
+cd /S/AIKIT_UI
 
 # bundle exec rake assets:precompile RAILS_ENV=development
 
