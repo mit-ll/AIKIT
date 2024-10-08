@@ -147,13 +147,13 @@ ENV HF_HUB_CACHE=/io/hub
 ENV HF_ASSETS_CACHE=/io/assets
 
 WORKDIR /S
-# COPY AIKit_UI.tar /S
-# RUN tar -xf AIKit_UI.tar
-COPY AIKIT_UI /S
-WORKDIR /S/AIKit_UI
+COPY AIKIT_UI.tar /S
+RUN tar -xf AIKIT_UI.tar
+# COPY AIKIT_UI /S
+WORKDIR /S/AIKIT_UI
 RUN bundle update
 # RUN rails db:migrate VERSION=0
-# RUN rails db:migrate
+RUN rails db:migrate
 RUN bundle exec rake assets:precompile RAILS_ENV=development
 RUN bundle exec rake assets:precompile RAILS_ENV=production
 

@@ -76,8 +76,6 @@ class InitialData < ActiveRecord::Migration[7.0]
     UserRole::create( user_id: ricke.id, role_name: "instructor", role_id: instructor.id )
     UserRole::create( user_id: ricke.id, role_name: "user", role_id: user.id )
 
-    UserRole::create( user_id: adam.id, role_name: "user", role_id: user.id )
-
     llm_set = ParameterSet::create( user_id: guest.id, set_name: "LLM set1", set_type: "LLM" )
     Parameter::create( user_id: guest.id, parameter_set_id: llm_set.id, parameter_name: "temperature", parameter_value: "0.0001" )
     Parameter::create( user_id: guest.id, parameter_set_id: llm_set.id, parameter_name: "top_p", parameter_value: "0.95" )
