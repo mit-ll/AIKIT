@@ -75,7 +75,7 @@ WORKDIR /S
 RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
     && python3 get-pip.py
 
-# COPY dependencies/wgetrc /etc
+# COPY wgetrc /etc
 WORKDIR /S
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs \
@@ -83,7 +83,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs \
     && ./sh.rustup.rs -y
 ENV PATH=~/.cargo/bin:$PATH
 
-COPY dependencies/llms_requirements.txt /S
+COPY llms_requirements.txt /S
 RUN pip install -r llms_requirements.txt 
 RUN pip install llama-cpp-python \
     && pip install fastapi uvicorn sse-starlette requests 
@@ -164,8 +164,10 @@ WORKDIR /io
 # ENV HF_HUB_OFFLINE="1"
 ENV SENTENCE_TRANSFORMERS_HOME=/io/Sentences
 
-COPY dependencies/entrypoint.sh /usr/bin
+COPY entrypoint.sh /usr/bin
 RUN chmod +x /usr/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 EXPOSE 3000
 EXPOSE 7860
