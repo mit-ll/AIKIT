@@ -39,6 +39,12 @@ MAINTAINER Darrell Ricke <Darrell.Ricke@ll.mit.edu>
 # GNU General Public License for more details.
 ################################################################################
 
+ENV http_proxy="http://llproxy.llan.ll.mit.edu:8080"
+ENV https_proxy="http://llproxy.llan.ll.mit.edu:8080"
+ENV ftp_proxy="http://llproxy.llan.ll.mit.edu:8080"
+ENV no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1
+COPY dependencies/apt.conf /etc/apt/apt.conf
+
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
@@ -75,15 +81,22 @@ WORKDIR /S
 RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
     && python3 get-pip.py
 
-# COPY wgetrc /etc
+COPY dependencies/wgetrc /etc
 WORKDIR /S
+# RUN cd /S && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /S/miniconda.sh
+# RUN bash /S/miniconda.sh -b -p /S/miniconda/
+# ENV PATH="/S/miniconda/bin/:$PATH"
+# RUN export PATH="/S/miniconda/bin/:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs \
     && chmod +x sh.rustup.rs \
     && ./sh.rustup.rs -y
 ENV PATH=~/.cargo/bin:$PATH
 
-COPY llms_requirements.txt /S
+# RUN conda create -n llama2
+# RUN conda init bash
+# RUN conda activate llama2
+COPY dependencies/llms_requirements.txt /S
 RUN pip install -r llms_requirements.txt 
 RUN pip install llama-cpp-python \
     && pip install fastapi uvicorn sse-starlette requests 
@@ -91,15 +104,18 @@ RUN pip install numba
 
 RUN pip install transformers \
     && pip install gradio \
-    && pip install langchain-community==0.2.1 langchain-core==0.2.1 \
+    # && pip install langchain-community==0.2.1 langchain-core==0.2.2 \
+    && pip install langchain-community langchain-core \
     && pip install langchain \
     && pip install "langserve[all]" \
     && pip install langchain_openai \
     && pip install langchainhub \
+    && pip install langchain_huggingface \
     && pip install langgraph \
     && pip install scipy \
     && pip install einops \
-    && pip install bitsandbytes 
+    && pip install bitsandbytes \
+    && pip install accelerate
 
 RUN git clone https://github.com/facebookresearch/llama.git
 WORKDIR /S/llama
@@ -138,36 +154,45 @@ RUN pip install sentence-transformers \
     && pip install tf-keras \
     && pip install tensorrt
 
-RUN pip install accelerate --upgrade
+RUN pip install frontend \
+    && pip install pymupdf \
+    && pip install soundfile \
+    && pip install speechbrain \
+    && pip install librosa 
 
-WORKDIR /S
+RUN pip install vllm \
+    && pip install adapters \
+    && pip install qdrant-client \
+    && pip install langchain_core \
+    && pip install langchain_experimental \
+    && pip install langsmith
+
+# RUN pip install tensorflow-gpu 
 
 ENV HF_HOME=/io
 ENV HF_HUB_CACHE=/io/hub
 ENV HF_ASSETS_CACHE=/io/assets
 
-WORKDIR /S
 COPY AIKIT_UI.tar /S
 RUN tar -xf AIKIT_UI.tar
-# COPY AIKIT_UI /S
 WORKDIR /S/AIKIT_UI
 RUN bundle update
-# RUN rails db:migrate VERSION=0
+RUN rails db:migrate VERSION=0
 RUN rails db:migrate
-RUN bundle exec rake assets:precompile RAILS_ENV=development
-RUN bundle exec rake assets:precompile RAILS_ENV=production
 
-WORKDIR /io
+RUN rake assets:precompile RAILS_ENV=production
+RUN rake assets:precompile RAILS_ENV=development
 
 # ENV TRANSFORMERS_OFFLINE="1"
 # ENV HF_DATASETS_OFFLINE="1"
 # ENV HF_HUB_OFFLINE="1"
 ENV SENTENCE_TRANSFORMERS_HOME=/io/Sentences
 
-COPY entrypoint.sh /usr/bin
+COPY dependencies/entrypoint.sh /usr/bin
 RUN chmod +x /usr/bin/entrypoint.sh
-COPY entrypoint.sh /usr/local/bin
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN ln -s /usr/bin /usr/local/bin
+# COPY dependencies/entrypoint.sh /usr/local/bin
+# RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 EXPOSE 3000
 EXPOSE 7860

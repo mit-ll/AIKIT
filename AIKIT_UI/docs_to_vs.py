@@ -1,7 +1,8 @@
 
 ################################################################################
-# Author: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
-#         Danielle Sullivan (email: Danielle.Sullivan@ll.mit.edu)
+# Authors: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
+#          Danielle Sullivan (email: Danielle.Sullivan@ll.mit.edu)
+#          Manasi Sharma (email: Manasi.Sharma@ll.mit.edu)
 #
 # RAMS request ID 1028809 
 # RAMS title: Artificial Intelligence tools for Knowledge-Intensive Tasks (AIKIT) 
@@ -46,6 +47,8 @@ import sys
 import torch
 import soundfile
 from transformers import Speech2TextProcessor, Speech2TextForConditionalGeneration
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+from transformers import Wav2Vec2Processor, HubertForCTC, Wav2Vec2ForCTC
 
 from langchain_community.vectorstores import FAISS
 from langchain_community.vectorstores import Chroma
@@ -109,6 +112,63 @@ def check_parameter( params, key, default ):
     return value
 
 ################################################################################
+def whisper(data, samplerate = None):
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    model_id = "openai/whisper-small" #whisper-large-v3"
+
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    model.to(device)
+
+    processor = AutoProcessor.from_pretrained(model_id, samplerate=samplerate)
+
+    pipe = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        torch_dtype=torch_dtype,
+        device=device,
+        # language='en',
+    )
+
+    result = pipe(data, return_timestamps=True)
+
+    return result["text"]
+
+################################################################################
+def hubert(data, samplerate = None):
+    processor = Wav2Vec2Processor.from_pretrained("facebook/hubert-large-ls960-ft")
+    model = HubertForCTC.from_pretrained("facebook/hubert-large-ls960-ft")
+
+    input_values = processor(data, return_tensors="pt", sampling_rate=samplerate).input_values  # Batch size 1
+    logits = model(input_values).logits
+    predicted_ids = torch.argmax(logits, dim=-1)
+    transcription = processor.decode(predicted_ids[0]).lower()
+
+    return transcription
+
+################################################################################
+def wav2vec2(data, samplerate = None):
+    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
+
+    # tokenize
+    input_values = processor(data, return_tensors="pt", padding="longest", sampling_rate=samplerate).input_values  # Batch size 1
+
+    # retrieve logits
+    logits = model(input_values).logits
+
+    # take argmax and decode
+    predicted_ids = torch.argmax(logits, dim=-1)
+    transcription = processor.batch_decode(predicted_ids)[0].lower()
+
+    return transcription
+
+################################################################################
 def create_vector_store( params ):
     extract_caption = True
     if "extract_captions" in params.keys():
@@ -147,9 +207,9 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend(doc)
             # Extract and load images
-            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
-            # doc = loader.load()
-            # documents.extend(doc)
+            loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            doc = loader.load()
+            documents.extend(doc)
 
         if f.endswith( ".txt"):
             loader = TextLoader( f )
@@ -176,14 +236,13 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend( doc )
         if f.endswith( ".ppt" ) or f.endswith( ".pptx" ) or f.endswith( ".PPT" ) or f.endswith( ".PPTX" ):
-            # Community PPT text loader
             loader = UnstructuredPowerPointLoader( f )
             doc = loader.load()
             documents.extend( doc )
             # Extract and load images
-            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
-            # doc = loader.load()
-            # documents.extend(doc)
+            loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            doc = loader.load()
+            documents.extend(doc)
 
         if f.endswith( ".xls" ) or f.endswith( ".xlsx" ) or f.endswith( ".XLS" ) or f.endswith( ".XLSX" ):
             loader = UnstructuredExcelLoader( f )
@@ -194,19 +253,14 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend( doc )
         if f.endswith( ".wav" ) or f.endswith( ".mp3" ):
-            speech_model = "facebook/s2t-small-librispeech-asr"
-            model = Speech2TextForConditionalGeneration.from_pretrained(speech_model)
-            processor = Speech2TextProcessor.from_pretrained(speech_model)
             data, samplerate = soundfile.read(f)
-            # data, samplerate = librosa.load(f, sr=16000)
-            inputs = processor(data, sampling_rate=samplerate, return_tensors="pt")
-            generated_ids = model.generate(inputs["input_features"], attention_mask=inputs["attention_mask"])
-            transcription = processor.batch_decode(generated_ids, skip_special_tokens=True)
-            print('--------------------------------')
-            print(f)
-            print(transcription[0])
-            trans_text = transcription[0]
-            doc = Document(page_content=trans_text, metadata={'source': f})
+            if audio_model == "hubert":
+                transcription = hubert(data, samplerate)
+            elif audio_model == "wav2vec2":
+                transcription = wav2vec2(data, samplerate)
+            else:
+                transcription = whisper(data, samplerate)
+            doc = Document(page_content=transcription, metadata={'source': f})
             documents.extend( [doc] )
 
     if txt_found:
@@ -225,7 +279,6 @@ def create_vector_store( params ):
 
     else:    # chromadb
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
-        # db = Chroma(persist_directory="/io/"+collection, embedding_function=embedding_function)
         db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
 
 ################################################################################
