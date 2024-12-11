@@ -1,0 +1,12 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @llm %>
+
+<div>
+  <%= link_to "Back to LLMs", llms_path %>
+
+  <% if session[:role] == "admin" -%>
+    <%= link_to "Edit this LLM", edit_llm_path(@llm) %> 
+    <%= button_to "Destroy this LLM", @llm, method: :delete %>
+  <% end -%>
+</div>

@@ -92,6 +92,9 @@ from langchain.chains import create_history_aware_retriever
 from langchain.prompts import PromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 
+from adapters import AutoAdapterModel
+# from qdrant_client import QdrantClient
+
 ################################################################################
 def create_collection( params ):
     vector_store = params["vector_store"]
@@ -101,14 +104,16 @@ def create_collection( params ):
 
     if vector_store == "FAISS":
         # db = FAISS.load_local(collection,
-        db = FAISS.load_local("FAISS_dbs/" + collection,
+        db = FAISS.load_local("/io/FAISS_dbs/" + collection,
             HuggingFaceEmbeddings(model_name=emb_model_name),
             allow_dangerous_deserialization=True)
+
+    # elif vector_store == "Qdrant":
 
     else:  # Chroma database
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
         # db = Chroma(persist_directory=collection, embedding_function=embedding_function)
-        db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
+        db = Chroma(persist_directory="/io/chroma_dbs/"+collection, embedding_function=embedding_function)
     
     return db
 
@@ -117,15 +122,52 @@ def format_docs(docs):
     return "\n\n".join([d.page_content for d in docs])
 
 ################################################################################
-def parse_ai_response( chain_order, question, answer, llm_results ):
-    llm_results["chain"][chain_order]["AI"] = answer.replace( "'", "" ).replace( '"', '' )
-    parts = answer.split( "Human: " )
-    for part in parts:
-        tokens = part.split( "System: " )
-        if tokens[0].strip() == question and len(tokens) >= 2:
-            llm_results["chain"][chain_order]["AI"] = tokens[1].replace( "'", "" ).replace( '"', '' )
+def parse_ai_response( chain_order, question, answer, llm_results, flag_text ):
+    llm_results["chain"][chain_order]["AI_context"] = answer
+    # print( "*** Question: " + question )
+    # print("----------------Answer---------------------------------")
+    # print(answer)
 
-    return llm_results
+    index = answer.find( question )
+    result = answer
+    if index > -1:
+      result = answer[index + len(question):]
+      # print( "**** Result: " + result )
+
+      j = result.find( "Human: " )
+      if j > -1:
+        result = result[0:j]
+
+    # print( answer )
+    ai = result
+    # flag = "Human: "
+    # index = result.rfind( "Human: " )
+    # if index > -1:
+    #     answer = answer[index:]
+        # print( "Clipped answer: " + answer )
+
+    # ai = answer
+    flag = "Answer: "
+    index = result.find( flag )
+    if index > -1:
+      response = result[index + len(flag):]
+      # print( "!!!! Found answer !!!!!" + response )
+      ai = response
+      doc_i = response.find( "Document: " )
+      if doc_i > -1:
+        ai = response[0:doc_i-1]
+        # print( "Short answer found: " + ai )
+      llm_results["chain"][chain_order]["AI"] = ai
+
+    else:
+      llm_results["chain"][chain_order]["AI"] = answer
+
+    # print("===================== AI ============================")
+    # print(ai)
+    # print("--------------------End--------------------------")
+
+    return llm_results, ai
+
 
 ################################################################################
 def parse_chat_response( chain_order, question, chat_history, llm_results ):
@@ -174,6 +216,20 @@ def parse_question_context( chain_order, context, llm_results ):
             llm_results["chain"][chain_order]["context"][str(i)]["page"] = item.metadata["page"]
         i += 1
     return llm_results
+
+################################################################################
+def split_answer( response, flag_text ): 
+    if len(flag_text) == 0: 
+      flag_text = "</context>"
+    index = response.rfind(flag_text)
+    if index == -1:
+      flag_text = "<|assistant|>"
+      index = response.rfind(flag_text) 
+
+    if index == -1:
+      return response[0:index], response[index+len(flag_text):]
+
+    return "", response   # flag_text not found
 
 ################################################################################
 def run_llm_rag( params, hf_token, db ) -> str:
@@ -226,6 +282,14 @@ def run_llm_rag( params, hf_token, db ) -> str:
         quantization_config=bnb_config,
         token=hf_token
     )
+    if "adapter_model" in params:
+      model = AutoAdapterModel.from_pretrained(
+          model_name,
+          quantization_config=bnb_config,
+          token=hf_token
+      )
+      adapter_name = model.load_adapter(params["adapter_model"])
+      model.active_adapters = adapter_name
    
     max_new_tokens = int(llm_params["max_new_tokens"])
     repetition_penalty = float(llm_params["repetition_penalty"])
@@ -266,6 +330,31 @@ def run_llm_rag( params, hf_token, db ) -> str:
         template=params["prompt_template"],
     )
 
+    c_prompt = (
+        "Given a chat history and the latest user question "
+        "which might reference context in the chat history, "
+        "formulate a standalone question which can be understood "
+        "without the chat history. Do NOT answer the question, "
+        "just reformulate it if needed and otherwise return it as is." )
+    if "chat_prompt" in params:
+      c_prompt = params["chat_prompt"]
+
+    qa_system_prompt = """You are an assistant for question-answering tasks. \
+        Use the following pieces of retrieved context to answer the question. \
+        If you don't know the answer, just say that you don't know. \
+        Use three sentences maximum and keep the answer concise.\
+        {context}"""
+    if "system_prompt" in params:
+      qa_system_prompt = params["system_prompt"]
+
+    similarity_k = 3
+    if "similarity_K" in params:
+      similarity_k = params["similarity_K"]
+
+    flag_text = "</context>"
+    if "flag_text" in params:
+        flag_text = params["flag_text"]
+
     # Check for questions chain
     if "chain" in params:
       cbm_memory = ConversationBufferMemory(memory_key="memory", input_key="question", return_messages=True, ai_prefix='AI', human_prefix="Human" )
@@ -292,13 +381,6 @@ def run_llm_rag( params, hf_token, db ) -> str:
 
       retriever = db.as_retriever(search_kwargs={"k": 5})
 
-      c_prompt = (
-          "Given a chat history and the latest user question "
-          "which might reference context in the chat history, "
-          "formulate a standalone question which can be understood "
-          "without the chat history. Do NOT answer the question, "
-          "just reformulate it if needed and otherwise return it as is." )
-
       cq_prompt = ChatPromptTemplate.from_messages(
           [ ("system", c_prompt),
             MessagesPlaceholder("chat_history"),
@@ -306,12 +388,6 @@ def run_llm_rag( params, hf_token, db ) -> str:
           ] )
 
       history_retriever = create_history_aware_retriever( llm2, retriever, cq_prompt )
-
-      qa_system_prompt = """You are an assistant for question-answering tasks. \
-          Use the following pieces of retrieved context to answer the question. \
-          If you don't know the answer, just say that you don't know. \
-          Use three sentences maximum and keep the answer concise.\
-          {context}"""
 
       qa_prompt = ChatPromptTemplate.from_messages( 
           [ ("system", qa_system_prompt),
@@ -353,7 +429,6 @@ def run_llm_rag( params, hf_token, db ) -> str:
               result = conversational_rag_chain.invoke({"input": question, "chat_history": chat_history},
                   config={"configurable": {"session_id": "abc123"} })
 
-          chat_history.extend([HumanMessage(content=question), result["answer"]])
           # print( result )
           
           # params["chain"][chain_order]["AI"] = result["answer"]  
@@ -363,7 +438,8 @@ def run_llm_rag( params, hf_token, db ) -> str:
           # print("answer:")
           # print( result["answer"] )
           # print( "----------------------------------" )
-          params = parse_ai_response( str(chain_order), question, result["answer"], params )
+          params, ai = parse_ai_response( str(chain_order), question, result["answer"], params, flag_text )
+          chat_history.extend([HumanMessage(content=question), ai])
           params = parse_context( str(chain_order), question, result["context"], params )
 
       jsn = json.dumps(params, indent=4)
@@ -393,13 +469,21 @@ def run_llm_rag( params, hf_token, db ) -> str:
           result = rag_chain.invoke({"input": question, "query": question})
           # result = rag_chain.invoke({"query": question})
           params["chain"][str(i)]["AI"] = result["answer"].strip().replace( "'", "" ).replace( '"', '' )
-          ai = params["chain"][str(i)]["AI"]
+          ai_context, ai_response = split_answer( result["answer"].strip(), flag_text )
+          params["chain"][i]["AI"] = ai_response
+          params["chain"][i]["AI_context"] = ai_context
+
           params = parse_question_context( str(i), result["context"], params)
+          # ai = params["chain"][str(i)]["AI"]
           # print(f'Question: {question}')
           # print(f'Answer: {ai}')
           # print(type(ai))
           # context = result["context"]
           # print(f'Context: {context}')
+
+          docs = db.similarity_search(question, k=similarity_k)
+          # docnames = [Path(doc.metadata["source"]).stem.strip("doc_") for doc in docs]
+          params["chain"][i]["similarity"] = "\n".join(docs)
 
       jsn = json.dumps(params, indent=4)
       print( jsn )

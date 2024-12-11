@@ -91,7 +91,7 @@ class Ask
     if status == 0
       return stderr, llm_results
     else
-      puts "**** Something went wrong" 
+      puts "**** Something went wrong: #{status} #{stderr} #{stdout}" 
       return stderr, llm_results
     end  # if
   end  # run_chain
@@ -126,11 +126,12 @@ class Ask
 
   ##############################################################################
   def self.llm_params( query, llm, collection_id, parameter_set_id )
-    puts "******Ask.llm_params**** collection_id: #{collection_id}, parameter_set_id: #{parameter_set_id}"
+    # puts "******Ask.llm_params**** collection_id: #{collection_id}, parameter_set_id: #{parameter_set_id}"
     template = Template.where( id: query.template_id ).take
     collection = Collection.where( id: collection_id ).take
     llm_params = {}
     llm_params[ "llm_model" ] = llm.llm_name
+    llm_params[ "adapter_name" ] = llm.adapter_name if ! llm.adapter_name.nil?
 
     if query.chain_id.nil?
       llm_params[ "questions" ] = ["\"#{query.question_text}\""]
@@ -141,6 +142,7 @@ class Ask
       questions_chain.each do |question_chain|
         llm_params["chain"][question_chain.chain_order] = {}
         llm_params["chain"][question_chain.chain_order]["question"] =  question_chain.question_text
+        llm_params["chain"][question_chain.chain_order]["flag_text"] =  question_chain.flag_text
       end  # do
 
       responses_chain = Response.where(chain_id: query.chain_id, llm_id: llm.id).order(:chain_order).to_a
@@ -154,6 +156,8 @@ class Ask
     if ! template.nil?
       llm_params[ "prompt_template" ] = template.template_text
       llm_params[ "prompt_input" ]    = template.prompt_input
+      llm_params[ "chat_prompt" ]     = template.chat_prompt
+      llm_params[ "system_prompt" ]   = template.system_prompt
       llm_params[ "input_variables" ] = template.input_variables.split( " " )
     end  # if
 
@@ -205,7 +209,7 @@ class Ask
 
   ##############################################################################
   def self.ask_llm_question( query, llm, questions, collection_id, parameter_set_id, temp_id )
-    puts "**** ask_llm_question called: collection_id: #{collection_id}, parameter_set_id: #{parameter_set_id} *****"
+    # puts "**** ask_llm_question called: collection_id: #{collection_id}, parameter_set_id: #{parameter_set_id} *****"
     if collection_id.nil?
       if ! query.chain_id.nil?
         return Ask::run_chain( query, llm, questions )

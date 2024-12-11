@@ -97,13 +97,13 @@ def create_collection( params ):
     collection = params["collection"]
 
     if vector_store == "FAISS":
-        db = FAISS.load_local("FAISS_dbs/"+collection,
+        db = FAISS.load_local("/io/FAISS_dbs/"+collection,
             HuggingFaceEmbeddings(model_name=emb_model_name),
             allow_dangerous_deserialization=True)
 
     else:  # Chroma database
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
-        db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
+        db = Chroma(persist_directory="/io/chroma_dbs/"+collection, embedding_function=embedding_function)
     
     return db
 

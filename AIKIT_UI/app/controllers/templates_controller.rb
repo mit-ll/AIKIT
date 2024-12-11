@@ -123,7 +123,7 @@ class TemplatesController < ApplicationController
   ##############################################################################
     # Only allow a list of trusted parameters through.
     def template_params
-      params.require(:template).permit(:user_id, :template_text, :prompt_input, :input_variables)
+      params.require(:template).permit(:user_id, :template_text, :prompt_input, :input_variables, :chat_prompt, :system_prompt)
     end  # template_params
 
   ##############################################################################

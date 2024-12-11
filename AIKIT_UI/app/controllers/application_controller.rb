@@ -43,7 +43,7 @@ class ApplicationController < ActionController::Base
 
 ################################################################################
 def select_user
-  session[:level] = 0 if session[:level].nil?
+  session[:level] = 1 if session[:level].nil?
 
   if session[:user_id].nil?
     user = User.where(user_name: "Guest").take

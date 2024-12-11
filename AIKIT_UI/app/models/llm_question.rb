@@ -90,6 +90,16 @@ class LlmQuestion < ApplicationRecord
       resp += self.add_collection( ai_response.collection_id ) if ! ai_response.collection_id.nil?
       resp += self.add_parameters( ai_response.collection_parameter_set_id, "RAG" ) if ! ai_response.collection_parameter_set_id.nil?
       resp += "AI: #{ai_response.response_text}\n"
+      resp += "AI context: #{ai_response.context}\n" if ! ai_response.context.nil?
+      resp += "Similarity: #{ai_response.similarity_docs}\n" if ! ai_response.similarity_docs.nil?
+
+      sources = Source.where(response_id: ai_response.id).order(:source_order).to_a 
+      sources.each do |source|
+        i = source.source_order
+        resp += "Source #{i}: #{Tools::doc_name(source.document_name)}\n"
+        resp += "Page: #{source.page}\n" if ! source.page.nil?
+        resp += "Source content: #{source.page_content}\n"
+      end  # do
     end  # do
 
     return resp
@@ -146,12 +156,14 @@ class LlmQuestion < ApplicationRecord
 
     if self.chain_id.nil?
       rag_params["questions"] = [self.question_text]
+      rag_params["flag_text"] = [self.flag_text]
     else
       # Write out the questions chain and any responses for this LLM.
       questions_chain = LlmQuestion.where(chain_id: self.chain_id).order(:chain_order).to_a
       rag_params["questions"] = []
       questions_chain.each do |question_chain|
         rag_params["questions"] +=  question_chain.question_text
+        rag_params["flag_text"] = [question_chain.flag_text] if rag_params["flag_text"].nil?
       end  # do
 
       responses_chain = Response.where(chain_id: self.chain_id, llm_id: llm_id).order(:chain_order).to_a
@@ -163,10 +175,13 @@ class LlmQuestion < ApplicationRecord
 
     template = Template.where( id: self.template_id ).take
     rag_params["prompt_template"] = template.template_text
-    rag_params["prompt_input"] = template.prompt_input
+    rag_params["prompt_input"]    = template.prompt_input
+    rag_params["chat_prompt"]     = template.chat_prompt
+    rag_params["system_prompt"]   = template.system_prompt
     rag_params["input_variables"] = template.input_variables
     llm = Llm.where( id: llm_id ).take
     rag_params["llm_model"] = llm.llm_name
+    rag_params["adapter_name"] = llm.adapter_name if ! llm.adapter_name.nil?
 
     # Write the parameters to JSON file.
     json_file = File.open("TEMP/llm_#{self.id}.json", "w")

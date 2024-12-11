@@ -1,3 +1,5 @@
+require 'open3'
+
 class DocumentsController < ApplicationController
   before_action :set_document, only: %i[ show edit update destroy see download send_pdf ]
 
@@ -71,9 +73,7 @@ class DocumentsController < ApplicationController
   ##############################################################################
   # GET /documents/1 or /documents/1.json
   def show
-    docname = Tools::clean_name( @document.filename )
-    @pdf_path = "/public/doc#{@document.id}_#{docname}"
-    # see( @document )
+    @pdf_path = @document.doc_check()
   end  # show
 
   ##############################################################################
@@ -134,21 +134,24 @@ class DocumentsController < ApplicationController
     docname = Tools::clean_name( @document.filename )
     puts "********** docname: #{docname} ************"
 
-    send_file("public/doc#{@document.id}_#{docname}", :filename => @document.filename, :type => @document.content_type)
+    path_name = @document.doc_check
+    send_file("#{path_name}", :filename => @document.filename, :type => @document.content_type)
   end  # download
 
   ##############################################################################
   def send_pdf
     docname = Tools::clean_name( @document.filename )
     puts "********** docname: #{docname} ************"
-    send_file("public/doc#{@document.id}_#{docname}", :file_name => @document.filename, :type => @document.content_type, :disposition => 'inline')
+    path_name = @document.doc_check
+    send_file("#{path_name}", :file_name => @document.filename, :type => @document.content_type, :disposition => 'inline')
   end # see
 
   ##############################################################################
   def see
     docname = Tools::clean_name( @document.filename )
     puts "********** docname: #{docname} ************"
-    send_file("public/doc#{@document.id}_#{docname}", :filename => docname, :type => @document.content_type, :disposition => 'inline')
+    path_name = @document.doc_check
+    send_file("#{path_name}", :filename => docname, :type => @document.content_type, :disposition => 'inline')
   end # see
 
   ##############################################################################
@@ -164,5 +167,6 @@ class DocumentsController < ApplicationController
     def document_params
       params.require(:document).permit(:folder_id, :previous_id, :user_id, :filename, :pathname, :file_type, :content_type, :is_parsed, :is_public, :contents_byte, :contents, contents_ascii, :document_type, :is_current, :created_at, :updated_at, :parameter_set_id, :list_name, :fav_list_name, :doc_ids, :col_ids, :col_name, :vec_name, :commit)
     end
+
   ##############################################################################
 end  # class

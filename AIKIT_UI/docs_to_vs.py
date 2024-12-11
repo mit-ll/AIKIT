@@ -275,11 +275,11 @@ def create_vector_store( params ):
         db = FAISS.from_documents(chunked_documents,
             HuggingFaceEmbeddings(model_name=emb_model_name))
 
-        db.save_local( "FAISS_dbs/"+collection )
+        db.save_local( "/io/FAISS_dbs/"+collection )
 
     else:    # chromadb
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
-        db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
+        db = Chroma(persist_directory="/io/chroma_dbs/"+collection, embedding_function=embedding_function)
 
 ################################################################################
 arg_count = len(sys.argv)

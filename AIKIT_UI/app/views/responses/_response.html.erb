@@ -1,0 +1,61 @@
+<div id="<%= dom_id response %>">
+<table>
+  <thead>
+    <tr>
+      <th>LLM Question</th>
+      <th>LLM</th>
+      <% if session[:level] >= 1 -%>
+        <th>Vector Store</th>
+        <th>Collection</th>
+      <% end -%>
+      <th>Created at</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><%= @llm_question.question_text if ! @llm_question.nil? %></td>
+      <td><%= @llm.llm_name if ! @llm.nil? %></td>
+      <% if session[:level] >= 1 -%>
+        <td><%= @collection.vector_name if ! @collection.nil? %></td>
+        <td><%= @collection.collection_name if ! @collection.nil? %></td>
+      <% end -%>
+      <td><%= response.created_at.strftime('%Y-%m-%d') %></td>
+  </tr>
+  </tbody>
+</table>
+<table>
+  <thead></thead>
+  <tbody>
+    <tr>
+      <td><%= response.response_text %></td>
+    </tr>
+  </tbody>
+</table>
+<% if ! response.context.nil? -%>
+  <pre>
+    <%= response.context %>
+  </pre>
+<% end -%>
+</div>
+<% sources = Source.where(response_id: response.id).order(:source_order).to_a -%>
+<% if sources.size > 0 -%>
+  <% sources.each do |source| -%>
+    <table border="2">
+      <thead></thead>
+      <tbody>
+        <tr>
+          <td>Source: <%= Tools::doc_name(source.document_name) %></td>
+        </tr>
+        <% if ! source.page.nil? -%>
+          <tr>
+            <td>Page: <%= source.page %></td>
+          </tr>
+        <% end -%>
+        <tr>
+          <td><%= source.page_content %></td>
+        </tr>
+      </tbody>
+    </table>
+    <br/>
+  <% end -%>
+<% end -%>

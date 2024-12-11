@@ -69,8 +69,9 @@ class Collection < ApplicationRecord
 
         # Add the name to the list of collection documents.
         docname = Tools::clean_name( document.filename )
-        col_file.write( "public/doc#{document.id}_#{docname}\n" )
-        puts "add_documents: adding public/doc#{document.id}_#{docname}"
+        path_name = document.doc_check
+        col_file.write( "#{path_name}\n" )
+        puts "add_documents: adding #{path_name}"
       end  # if
     end  # do
     col_file.close_file()

@@ -64,7 +64,24 @@ class LlmQuestionsController < ApplicationController
     # puts "********** llm_questions_controller: show called; params #{params}"
     @llm_questions = nil
     @llm_questions = LlmQuestion.where( chain_id: @llm_question.chain_id ).order(:chain_order).to_a if ! @llm_question.chain_id.nil?
- 
+
+    # Setup the hash of LLM models
+    @llms = Llm.all
+    @llm_names = {}
+    @llms.each do |llm|
+      @llm_names[ llm.id ] = llm.llm_name
+    end  # do
+
+    # Setup the hash of LLM (chain) responses by llm.id and llm_question.id
+    @llm_responses = {}
+    @llm_questions.each do |llm_question|
+      responses = Response.where( llm_question_id: llm_question.id ).to_a
+      responses.each do |response|
+        @llm_responses[ response.llm_id ] = {} if @llm_responses[ response.llm_id ].nil?
+        @llm_responses[ response.llm_id ][ response.llm_question_id ] = response
+      end  # do
+    end  # do 
+
     if session[:level] >= 5 
       @collections = Collection.where( user_id: session[:user_id] ).to_a
       @templates = Template.where( user_id: session[:user_id] ).to_a
@@ -81,12 +98,6 @@ class LlmQuestionsController < ApplicationController
     @collections.each do |collection|
       @collections_hash[ collection.id ] = collection
     end  # do
-
-    @llms = Llm.all
-    @llm_names = {}
-    @llms.each do |llm|
-      @llm_names[ llm.id ] = llm.llm_name
-    end  # do
     @responses = Response.where( llm_question_id: @llm_question.id ).to_a
     @add_llm_questions = LlmQuestion.new
   end  # show
@@ -94,7 +105,7 @@ class LlmQuestionsController < ApplicationController
   ##############################################################################
   def query
     # puts "******** query; params #{params}"
-    llm_question_id = params[:id]
+    llm_question_id = params[:id].to_i
     collection_id = params[:collection_id][:collection_id] if ! params[:collection_id].nil?
     # puts "****** collection_id: #{collection_id}"
     llm_id = params[:llm_id][:llm_id] if ! params[:llm_id].nil?
@@ -125,21 +136,56 @@ class LlmQuestionsController < ApplicationController
         end  # do
       end  # if
 
-      if ! llm_questions.nil?
+      notice = err_status
+      notice = notice[0..1024] if notice.size >= 1024
+      if ! llm_questions.nil? && ! llm_response.nil? && ! llm_response["chain"].nil?
+        # puts "***** Calling chain_responses next:"
         chain_responses( llm_response, llm_questions, @llm )
+        notice = "LLM analysis complete."
       else
+        # puts "***** Alternative to chain_responses: #{llm_response}"
         collection_parameter_set_id = nil
         collection = Collection.where( id: collection_id ).take
         collection_parameter_set_id = collection.parameter_set_id if ! collection.nil?
-        response_rec = Response.create( user_id: @llm_question.user_id, llm_question_id: @llm_question.id,
-            llm_id: @llm.id, response_text: llm_response,
-            collection_id: collection_id,
-            collection_parameter_set_id: collection_parameter_set_id,
-            llm_parameter_set_id: parameter_set_id,
-            created_at: Time::now )
+        llm_response_0 = ""
+        llm_context_0 = ""
+        if ! llm_response.nil? && ! llm_response["chain"].nil? && ! llm_response["chain"]["0"].nil?
+          llm_response_0 = llm_response["chain"]["0"]["AI"] 
+          puts "**** llm_response_0: #{llm_response_0}"
+          ai_context = llm_response["chain"]["0"]["AI_context"]
+          llm_context_0 = llm_response["chain"]["0"]["context"]
+          response_rec = Response.create( user_id: @llm_question.user_id, llm_question_id: @llm_question.id,
+              llm_id: @llm.id, 
+              collection_id: collection_id,
+              collection_parameter_set_id: collection_parameter_set_id,
+              llm_parameter_set_id: parameter_set_id,
+              response_text: llm_response_0,
+              context: ai_context,
+              created_at: Time::now )
+
+          if ! llm_context_0.nil?
+            llm_context_0.each do |source_order, source_context|
+              page_content = source_context["page_content"]
+              page = nil
+              page = source_context["page"].to_i if ! source_context["page"].nil?
+              document_name = source_context["source"]
+              print "  source: #{document_name}, page: #{page}"
+      
+              source_rec = Source.create( user_id: @llm_question.user_id,
+                llm_question_id: @llm_question.id,
+                response_id: response_rec.id,
+                source_order: source_order,
+                document_name: document_name,
+                page: page,
+                page_content: page_content )
+            end  # do
+          end  # if
+
+          notice = "LLM analysis complete."
+        end  # if
       end  # if
       respond_to do |format|
-        format.html { redirect_to llm_question_url(@llm_question), notice: "LLM analysis complete." }
+        format.html { redirect_to llm_question_url(@llm_question), notice: notice }
         format.json { render :show, status: :llm_question, location: @llm_question }
       end  # do
     end  # if
@@ -326,6 +372,11 @@ class LlmQuestionsController < ApplicationController
     # Also delete all of the responses for this question.
     responses = Response.where( llm_question_id: @llm_question.id ).to_a
     responses.each do |response|
+      # Delete any document sources for this response.
+      sources = Source.where( response_id: response.id ).to_a
+      sources.each do |source|
+        source.destroy
+      end  # do
       response.destroy
     end  # do
 
@@ -379,31 +430,75 @@ class LlmQuestionsController < ApplicationController
   end  # level_plus
 
   ##############################################################################
-  def match_question( llm_question, query, llm_response, llm )
+  def level_set
+    session[:level] = params[:id].to_i
+    respond_to do |format|
+      format.html { redirect_to llm_questions_url, notice: "Level set to #{params[:id]}" }
+      format.json { head :no_content }
+    end  # do
+  end  # level_set
+
+  ##############################################################################
+  def match_question( llm_question, query, llm_response, rag_context, llm, chain_order )
     return if llm_question.nil?
     puts "**** match_question ****"
-    puts "Q1: |#{question.question_text}|"
+    puts "Q1: |#{llm_question.question_text}|"
     puts "Q2: |#{query}|"
     if query == llm_question.question_text
-      response_rec = Response.create( user_id: session[:user_id], llm_question_id: llm_question.id,
-      llm_id: llm.id, response_text: llm_response.gsub("||","|").gsub("|","\n"),
+      response_rec = Response.create( user_id: session[:user_id], 
+        llm_question_id: llm_question.id,
+        llm_id: llm.id, 
+        chain_order: chain_order,
+        response_text: llm_response.gsub("||","|").gsub("|","\n"),
+        context: rag_context,
         created_at: Time::now )
     end  # if
   end  # match_question
       
   ##############################################################################
   def chain_responses( llm_response, llm_questions, llm )
-    puts "llm_response: |#{llm_response}|"
-    responses = llm_response.split( "\n" )
-    for i in 0...llm_response.size do
-      puts "***** line: #{i}: |#{llm_response[i]}|"
-    end  # do
-    puts "---------------------------------------------------------------------"
+    puts "***** llm_response: |#{llm_response}|"
 
-    for i in 0...llm_response.size do
-      parts = llm_response[i].split( "\t" )
-      puts "i: #{i}: |#{llm_response[i]}|"
-      match_question( llm_questions[i], parts[0], parts[1], llm )
+    # Index hash by chain order index
+    questions_llm = {}
+    llm_questions.each do |llm_question|
+      questions_llm[llm_question.chain_order.to_i] = llm_question
+    end  # do
+
+    for chain_order in llm_response["chain"].keys() do
+      chain_i = chain_order.to_i
+      question = llm_response["chain"][chain_order]["question"]
+      ai_response = llm_response["chain"][chain_order]["AI"]
+      ai_response = "" if ai_response.nil?
+      context = llm_response["chain"][chain_order]["context"]
+      ai_context = llm_response["chain"][chain_order]["AI_context"]
+
+      print "question: " + question
+      print "AI: " + ai_response
+
+      response_rec = Response.create( user_id: session[:user_id], 
+        llm_question_id: questions_llm[chain_i].id,
+        llm_id: llm.id, 
+        chain_order: chain_i,
+        response_text: ai_response.gsub("||","|").gsub("|","\n"),
+        context: ai_context,
+        created_at: Time::now )
+
+      context.each do |source_order, source_context|
+        page_content = source_context["page_content"]
+        page = nil
+        page = source_context["page"].to_i if ! source_context["page"].nil?
+        document_name = source_context["source"]
+        print "  source: #{document_name}, page: #{page}"
+
+        source_rec = Source.create( user_id: session[:user_id],
+          llm_question_id: questions_llm[chain_i].id,
+          response_id: response_rec.id,
+          source_order: source_order,
+          document_name: document_name,
+          page: page,
+          page_content: page_content )
+      end  # do
     end  # do
   end  # chain_responses
 
@@ -412,13 +507,13 @@ class LlmQuestionsController < ApplicationController
   ##############################################################################
     # Use callbacks to share common setup or constraints between actions.
     def set_llm_question
-      @llm_question = LlmQuestion.find(params[:id])
+      @llm_question = LlmQuestion.find(params[:id].to_i)
     end
 
   ##############################################################################
     # Only allow a list of trusted parameters through.
     def llm_question_params
-      params.require(:llm_question).permit(:user_id, :folder_id, :template_id, :question_text, :question_name, :is_public, :updated_at, :chain_id, :chain_order, :collection_id, :llm_id, :parameter_set_id, :template_text, :prompt_input, :input_variables )
+      params.require(:llm_question).permit(:user_id, :folder_id, :template_id, :question_text, :question_name, :is_public, :updated_at, :chain_id, :chain_order, :collection_id, :llm_id, :parameter_set_id, :template_text, :flag_text, :prompt_input, :input_variables, :chat_prompt, :system_prompt )
     end  # llm_question_params
   ##############################################################################
 end  # class

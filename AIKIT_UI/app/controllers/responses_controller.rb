@@ -150,6 +150,12 @@ class ResponsesController < ApplicationController
   ##############################################################################
   # DELETE /responses/1 or /responses/1.json
   def destroy
+    # Delete all Document sources linked to this LLM RAG response
+    sources = Source.where( response_id: @response.id ).to_a
+    sources.each do |source|
+      source.destroy
+    end  # do
+
     @response.destroy!
 
     respond_to do |format|
@@ -169,7 +175,7 @@ class ResponsesController < ApplicationController
   ##############################################################################
     # Only allow a list of trusted parameters through.
     def response_params
-      params.require(:response).permit(:user_id, :llm_question_id, :llm_id, :chain_id, :collection_id, :collection_parameter_set_id, :llm_parameter_set_id, :chain_order, :response_text, :runtime, :created_at)
+      params.require(:response).permit(:user_id, :llm_question_id, :llm_id, :chain_id, :collection_id, :collection_parameter_set_id, :llm_parameter_set_id, :template_id, :chain_order, :response_text, :context, :similarity_docs, :runtime, :created_at)
     end
   ##############################################################################
 end
