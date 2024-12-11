@@ -492,7 +492,7 @@ def run_llm_rag( params, hf_token, db ) -> str:
 ################################################################################
 # environ["TRANSFORMERS_OFFLINE"] = "1"
 environ["TRANSFORMERS_CACHE"] = "."
-hf_token = "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"
+hf_token = "hf_Y..."
 arg_count = len(sys.argv)
 if ( arg_count >= 2 ):
     with open( sys.argv[1] ) as json_file:
