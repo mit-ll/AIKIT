@@ -98,7 +98,8 @@ ENV PATH=~/.cargo/bin:$PATH
 # RUN conda activate llama2
 COPY dependencies/llms_requirements.txt /S
 RUN pip install -r llms_requirements.txt 
-RUN pip install llama-cpp-python \
+RUN pip install ninja \
+    && pip install llama-cpp-python \
     && pip install fastapi uvicorn sse-starlette requests 
 RUN pip install numba
 

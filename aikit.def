@@ -92,6 +92,7 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   export PATH=~/.cargo/bin:$PATH
 
   pip install -r llms_requirements.txt
+  pip install ninja
   pip install llama-cpp-python 
   pip install fastapi uvicorn sse-starlette requests
   pip install numba
