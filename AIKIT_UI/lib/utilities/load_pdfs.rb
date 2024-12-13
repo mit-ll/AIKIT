@@ -100,6 +100,13 @@ def dup_file( file_path, filename, doc_id )
 
   # Write out the file in the public folder
   clean_name = Tools::clean_name( filename )
+  docname = "public/doc#{doc_id}_#{clean_name}"
+  outfile = OutputFile.new( docname )
+  outfile.open_file()
+  outfile.zap( contents )
+  outfile.close_file()
+
+  # Write out the file in the /io/docs/ folder
   docname = "/io/docs/doc#{doc_id}_#{clean_name}"
   outfile = OutputFile.new( docname )
   outfile.open_file()

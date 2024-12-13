@@ -104,7 +104,7 @@ class LlmQuestionsController < ApplicationController
 
   ##############################################################################
   def query
-    # puts "******** query; params #{params}"
+    puts "******** query; params #{params}"
     llm_question_id = params[:id].to_i
     collection_id = params[:collection_id][:collection_id] if ! params[:collection_id].nil?
     # puts "****** collection_id: #{collection_id}"

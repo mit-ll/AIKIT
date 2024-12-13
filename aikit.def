@@ -1,5 +1,10 @@
 Bootstrap: docker
-From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+# From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+# From: nvidia/cuda:12.2.0-cudnn8-runtime-ubuntu22.04    # TX-Green
+# From: nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04     # ait-dev-01
+From: nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04      # TX-E1
+
+# Author: Darrell O. Ricke, Ph.D. (Darrell.Ricke@ll.mit.edu)
 
 ################################################################################
 # Author: Darrell O. Ricke, Ph.D.  (email: Darrell.Ricke@ll.mit.edu)
@@ -43,10 +48,17 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   mkdir -p ${SINGULARITY_ROOTFS}/io/
 
 %files
-  llms_requirements.txt /S
+  dependencies/apt.conf /etc/apt/apt.conf
+  dependencies/wgetrc /S/wgetrc
+  dependencies/llms_requirements.txt /S
   AIKIT_UI.tar /S
 
 %post
+  export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+  export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
+
   export DEBIAN_FRONTEND=noninteractive
 
   apt-get update
@@ -84,13 +96,19 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
   python3 get-pip.py
 
-# cp /S/wgetrc /etc
+  cp /S/wgetrc /etc
+# cd /S && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /S/miniconda.sh
+# bash /S/miniconda.sh -b -p /S/miniconda/
+# export PATH="/S/miniconda/bin/:$PATH"
 
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > sh.rustup.rs 
   chmod +x sh.rustup.rs 
   ./sh.rustup.rs -y
   export PATH=~/.cargo/bin:$PATH
 
+# conda create -n llama2
+# conda init bash
+# conda activate llama2
   pip install -r llms_requirements.txt
   pip install ninja
   pip install llama-cpp-python 
@@ -132,6 +150,23 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   pip install "transformers[sentencepiece]"
   pip install langchain-huggingface
 
+  pip install pytesseract 
+  pip install tf-keras 
+  pip install tensorrt
+
+  pip install frontend 
+  pip install pymupdf 
+  pip install soundfile 
+  pip install speechbrain 
+  pip install librosa
+
+  pip install vllm 
+  pip install adapters 
+  pip install qdrant-client 
+  pip install langchain_core 
+  pip install langchain_experimental 
+  pip install langsmith
+
   git clone https://github.com/facebookresearch/llama.git
   cd /S/llama
   pip install .
@@ -143,13 +178,14 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
   apt-get update
   apt-get install -y nvidia-container-toolkit
 
-  tar -xf AIKIT_UI.tar
-  cd AIKIT_UI
-  bundle update
-
 %environment
   export DEBIAN_FRONTEND=noninterative
   export PATH=/usr/local/cuda/bin:/S/miniconda/bin/:$PATH
+
+# export HTTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+# export HTTPS_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+# export FTP_PROXY="http://llproxy.llan.ll.mit.edu:8080"
+# export no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1,0.0.0.0
 
   export HF_HOME=/io
   export HF_HUB_CACHE=/io/hub
@@ -158,3 +194,4 @@ From: nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 %runscript
   cd /io
   "$@"
+

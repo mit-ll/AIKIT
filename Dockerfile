@@ -1,4 +1,4 @@
-FROM ubuntu:23.10
+FROM ubuntu:22.04
 
 MAINTAINER Darrell Ricke <Darrell.Ricke@ll.mit.edu>
 
@@ -98,9 +98,8 @@ ENV PATH=~/.cargo/bin:$PATH
 # RUN conda activate llama2
 COPY dependencies/llms_requirements.txt /S
 RUN pip install -r llms_requirements.txt 
-RUN pip install ninja \
-    && pip install llama-cpp-python \
-    && pip install fastapi uvicorn sse-starlette requests 
+# RUN pip install "llama-cpp-python[server]"
+RUN pip install fastapi uvicorn sse-starlette requests 
 RUN pip install numba
 
 RUN pip install transformers \
