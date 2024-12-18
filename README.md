@@ -39,7 +39,7 @@ GNU General Public License for more details.
 
 **Summary**
 
-  This is the Artificial Intelligence Tools for Knoledge-Intensive Tasks (AIKIT)
+  This is the Artificial Intelligence Tools for Knowledge-Intensive Tasks (AIKIT)
 system.  AIKIT is packaged as both Docker and Singularity continers.  AIKIT 
 includes Large Language Models (LLM), LangChain, Jupyter notebooks, 
 Retrieval-Augmented Generation (RAG), and Ruby-on-Rails web interface.
