@@ -11,16 +11,6 @@
 //  require openlayers-rails
 //  require local_time
 
-//= require highcharts
-//= require highcharts/highcharts-more
-//  require highcharts/modules/exporting
-//  require highcharts/modules/export-data
-//  require highcharts/modules/accessibility
-
-//  require highcharts/highstock
-//  require highstock
-
-//= require d3
 //= require scatter
 
 //  require apexcharts

@@ -39,12 +39,6 @@ MAINTAINER Darrell Ricke <Darrell.Ricke@ll.mit.edu>
 # GNU General Public License for more details.
 ################################################################################
 
-ENV http_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV https_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV ftp_proxy="http://llproxy.llan.ll.mit.edu:8080"
-ENV no_proxy=.ll.mit.edu,.mit.edu,localhost,127.0.0.1
-COPY dependencies/apt.conf /etc/apt/apt.conf
-
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
@@ -81,7 +75,6 @@ WORKDIR /S
 RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py \
     && python3 get-pip.py
 
-COPY dependencies/wgetrc /etc
 WORKDIR /S
 # RUN cd /S && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /S/miniconda.sh
 # RUN bash /S/miniconda.sh -b -p /S/miniconda/
@@ -96,7 +89,7 @@ ENV PATH=~/.cargo/bin:$PATH
 # RUN conda create -n llama2
 # RUN conda init bash
 # RUN conda activate llama2
-COPY dependencies/llms_requirements.txt /S
+COPY llms_requirements.txt /S
 RUN pip install -r llms_requirements.txt 
 # RUN pip install "llama-cpp-python[server]"
 RUN pip install fastapi uvicorn sse-starlette requests 
@@ -188,11 +181,9 @@ RUN rake assets:precompile RAILS_ENV=development
 # ENV HF_HUB_OFFLINE="1"
 ENV SENTENCE_TRANSFORMERS_HOME=/io/Sentences
 
-COPY dependencies/entrypoint.sh /usr/bin
+COPY entrypoint.sh /usr/bin
 RUN chmod +x /usr/bin/entrypoint.sh
 RUN ln -s /usr/bin /usr/local/bin
-# COPY dependencies/entrypoint.sh /usr/local/bin
-# RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]
 EXPOSE 3000
 EXPOSE 7860
