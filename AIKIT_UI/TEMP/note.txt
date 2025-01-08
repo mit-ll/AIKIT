@@ -1,0 +1,1 @@
+This directory is for tempory files for LLM RAG vector store creation.

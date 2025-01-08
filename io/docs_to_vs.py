@@ -169,7 +169,7 @@ def create_vector_store( params ):
 
     chunk_size = 1024
     chunk_overlap = 40
-    emb_model_name = "sentence-transformers/all-mpnet-base-vs"
+    emb_model_name = "sentence-transformers/all-mpnet-base-v2"
     audio_model = "whisper"
     if "rag_params" in params.keys():
         chunk_size = int( check_parameter( params["rag_params"], "chunk_size", chunk_size ) )
@@ -256,12 +256,12 @@ def create_vector_store( params ):
         db = FAISS.from_documents(chunked_documents,
             HuggingFaceEmbeddings(model_name=emb_model_name))
 
-        db.save_local( collection )
+        db.save_local( "FAISS_dbs/" + collection )
 
     else:    # chromadb
         # emb_model_name = "all-MiniLM-L6-v2"
         embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
-        db = Chroma(persist_directory=collection, embedding_function=embedding_function)
+        db = Chroma(persist_directory="chroma_dbs/" + collection, embedding_function=embedding_function)
 
 ################################################################################
 arg_count = len(sys.argv)
