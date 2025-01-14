@@ -61,9 +61,11 @@ class LlmQuestionsController < ApplicationController
   ##############################################################################
   # GET /llm_questions/1 or /llm_questions/1.json
   def show
-    # puts "********** llm_questions_controller: show called; params #{params}"
-    @llm_questions = nil
-    @llm_questions = LlmQuestion.where( chain_id: @llm_question.chain_id ).order(:chain_order).to_a if ! @llm_question.chain_id.nil?
+    if ! @llm_question.chain_id.nil?
+      @llm_questions = LlmQuestion.where( chain_id: @llm_question.chain_id ).order(:chain_order).to_a if ! @llm_question.chain_id.nil?
+    else
+      @llm_questions = [@llm_question]
+    end  # if
 
     # Setup the hash of LLM models
     @llms = Llm.all
@@ -305,6 +307,7 @@ class LlmQuestionsController < ApplicationController
       @llm_question.user_id = session[:user_id]
       @llm_question.template_id = template_id if ! template_id.nil? && template_id.size > 0
       @llm_question.question_text = llm_question_text
+      @llm_question.chain_id = chain_id
       @llm_question.chain_order = chain_order
       @llm_question.save
       puts "********* llm_question saved: |#{@llm_question.id}| #{llm_question_text}, chain_id: #{chain_id}, chain_order: #{chain_order}"

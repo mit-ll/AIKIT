@@ -158,7 +158,8 @@ RUN pip install vllm \
     && pip install qdrant-client \
     && pip install langchain_core \
     && pip install langchain_experimental \
-    && pip install langsmith
+    && pip install langsmith \
+    && pip install "huggingface_hub[cli]"
 
 # RUN pip install tensorflow-gpu 
 

@@ -17,9 +17,13 @@
       <tbody>
         <tr>
           <td>Question(s) - one per line</td>
-        </tr><tr>
-          <td>Chain questions? <%= check_box_tag("chain", value=true, checked= false ) %></td>
-        </tr><tr>
+        </tr>
+        <% if session[:level] >= 1 -%>
+          <tr>
+            <td>Chain questions? <%= check_box_tag("chain", value=true, checked= true ) %></td>
+          </tr>
+        <% end -%>
+        <tr>
           <td><%= form.text_area :question_text, :size => "120x10" %></td>
         </tr><tr>
           <td><%= collection_select :template_id, :template_id, @templates, :id, :template_text, prompt: "Optional Template" %></td>

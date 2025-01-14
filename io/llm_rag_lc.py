@@ -44,7 +44,7 @@ import time
 
 import chromadb
 
-from langchain_chroma import Chroma
+# from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_community.embeddings.sentence_transformer import (
     SentenceTransformerEmbeddings,
@@ -110,10 +110,10 @@ def create_collection( params ):
 
     # elif vector_store == "Qdrant":
 
-    else:  # Chroma database
-        embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
+#   else:  # Chroma database
+#       embedding_function = SentenceTransformerEmbeddings(model_name=emb_model_name)
         # db = Chroma(persist_directory=collection, embedding_function=embedding_function)
-        db = Chroma(persist_directory="/io/chroma_dbs/"+collection, embedding_function=embedding_function)
+#       db = Chroma(persist_directory="chroma_dbs/"+collection, embedding_function=embedding_function)
     
     return db
 
