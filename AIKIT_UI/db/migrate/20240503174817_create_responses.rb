@@ -58,7 +58,7 @@ class CreateResponses < ActiveRecord::Migration[7.0]
       t.integer :chain_order
       t.datetime :runtime
       t.datetime :created_at
-      t.text :response_text
+      t.text :response_text, limit: 16.megabytes-1
       t.text :context
     end
   end
