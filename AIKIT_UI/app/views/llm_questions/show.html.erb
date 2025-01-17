@@ -75,7 +75,7 @@
   <%= render "llm_questions", llm_questions: @llm_questions, selected_llm_question: @llm_question %>
 <% end -%>
 <% if ! @llm_responses.nil? -%>
-  <%= render "llm_responses", llm_questions: @llm_questions, llm_responses: @llm_responses, llms: @llms %>
+  <%= render "llm_responses", llm_questions: @llm_questions, llm_responses: @llm_responses, llm_names: @llm_names %>
 <% end -%>
 <%= render "form2", llm_question: @add_llm_questions, selected_llm_question: @llm_question %>
 <%= link_to "Delete this LLM question & responses", @llm_question, method: :delete %>
