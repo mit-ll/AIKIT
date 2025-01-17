@@ -39,6 +39,7 @@ import os
 import os.path
 from os import environ
 import pandas as pd
+import string
 import sys
 import time
 
@@ -122,7 +123,57 @@ def format_docs(docs):
     return "\n\n".join([d.page_content for d in docs])
 
 ################################################################################
-def parse_ai_response( chain_order, question, answer, llm_results, flag_text ):
+def find_question(question, answer):
+    i = answer.find(question)
+    if i == -1:
+        return answer, answer
+    qlen = len(question)
+    return answer[i+qlen+1:].lstrip(), answer[i:]
+
+################################################################################
+def ascii_only(value: str) -> str:
+    # return ''.join(i for i in value if i.isprintable())
+    return ''.join(i for i in value if i.isascii())
+
+################################################################################
+def parse_ai_response( chain_order, question, answer, llm_results ):
+    # print ("*******************************************************************")
+    # print( "question: |" + question + "|")
+    ans, context = find_question(question, ascii_only(answer))
+    # print("ans: " + ans)
+
+    i = ans.find("Answer: ")
+    if i >= 0:
+        ans = ans[i+8:]
+        # context = ans
+        # print( "**** Answer: " + ans )
+
+    i = ans.find("AI: ")
+    if i >= 0:
+        ans = ans[i+4:]
+        # context = ans
+        # print( "**** AI: " + ans )
+
+    i = ans.find("Document: ")
+    if i > 0:
+        # context = ans[i:]
+        ans = ans[0:i-1].rstrip()
+    if i == 0:
+        # context = ans
+        ans = ""
+
+    # llm_results["chain"][chain_order]["AI_context"] = answer
+    llm_results["chain"][chain_order]["AI_context"] = context
+    llm_results["chain"][chain_order]["AI"] = ans
+    # print("chain_order: " + chain_order)
+    # print("parse_ai_response: " + ans )
+    # print("context: " + context)
+    # print("-------------------------------------------------------------")
+    # print("answer: " + answer )
+    return llm_results, ans
+
+################################################################################
+def old_parse_ai_response( chain_order, question, answer, llm_results, flag_text ):
     llm_results["chain"][chain_order]["AI_context"] = answer
 
     index = answer.find( question )
@@ -170,29 +221,14 @@ def parse_chat_response( chain_order, question, chat_history, llm_results ):
     return llm_results
 
 ################################################################################
-def parse_context( chain_order, question, context, llm_results ):
+def parse_context( chain_order, context, llm_results ):
     i = 1
     if "context" not in llm_results["chain"][chain_order]:
         llm_results["chain"][chain_order]["context"] = {}
 
     for item in context:
         llm_results["chain"][chain_order]["context"][str(i)] = {}
-        llm_results["chain"][chain_order]["context"][str(i)]["page_content"] = item.page_content
-        llm_results["chain"][chain_order]["context"][str(i)]["source"] = item.metadata["source"]
-        if "page" in item.metadata:
-            llm_results["chain"][chain_order]["context"][str(i)]["page"] = item.metadata["page"]
-        i += 1
-    return llm_results
-
-################################################################################
-def parse_question_context( chain_order, context, llm_results ):
-    i = 1
-    if "context" not in llm_results:
-        llm_results["chain"][chain_order]["context"] = {}
-
-    for item in context:
-        llm_results["chain"][chain_order]["context"][str(i)] = {}
-        llm_results["chain"][chain_order]["context"][str(i)]["page_content"] = item.page_content
+        llm_results["chain"][chain_order]["context"][str(i)]["page_content"] = ascii_only(item.page_content)
         llm_results["chain"][chain_order]["context"][str(i)]["source"] = item.metadata["source"]
         if "page" in item.metadata:
             llm_results["chain"][chain_order]["context"][str(i)]["page"] = item.metadata["page"]
@@ -342,7 +378,6 @@ def run_llm_rag( params, hf_token, db ) -> str:
       cbm_memory = ConversationBufferMemory(memory_key="memory", input_key="question", return_messages=True, ai_prefix='AI', human_prefix="Human" )
   
       # Load in past chat questions and answers.
-      some_history = False
       chains = params["chain"]
       chains_keys = chains.keys()
       ai_response = True
@@ -357,7 +392,6 @@ def run_llm_rag( params, hf_token, db ) -> str:
           response = qr["AI"]
           cbm_memory.chat_memory.add_user_message( question )
           cbm_memory.chat_memory.add_ai_message( response )
-          some_history = True
         else:
           ai_response = False
 
@@ -404,13 +438,10 @@ def run_llm_rag( params, hf_token, db ) -> str:
           question = qr["question"].replace( '"', '' )
           # print("****** Question:" + question )
 
-          if some_history:
-              result = conversational_rag_chain.invoke({"input": question, "chat_history": chat_history},
-                  config={"configurable": {"session_id": "abc123"} })
-          else:
-              result = conversational_rag_chain.invoke({"input": question, "chat_history": chat_history},
-                  config={"configurable": {"session_id": "abc123"} })
+          result = conversational_rag_chain.invoke({"input": question, "chat_history": chat_history},
+              config={"configurable": {"session_id": "abc123"} })
 
+          # print( "-----------RESULT-----------------------" )
           # print( result )
           
           # params["chain"][chain_order]["AI"] = result["answer"]  
@@ -420,9 +451,10 @@ def run_llm_rag( params, hf_token, db ) -> str:
           # print("answer:")
           # print( result["answer"] )
           # print( "----------------------------------" )
-          params, ai = parse_ai_response( str(chain_order), question, result["answer"], params, flag_text )
+          params, ai = parse_ai_response( str(chain_order), question, result["answer"], params )
+          # print("Answer: " + ai)
           chat_history.extend([HumanMessage(content=question), ai])
-          params = parse_context( str(chain_order), question, result["context"], params )
+          params = parse_context( str(chain_order), result["context"], params )
 
       jsn = json.dumps(params, indent=4)
       print( jsn )
@@ -459,7 +491,7 @@ def run_llm_rag( params, hf_token, db ) -> str:
           params["chain"][i]["AI"] = ai_response
           params["chain"][i]["AI_context"] = ai_context
 
-          params = parse_question_context( str(i), result["context"], params)
+          params = parse_context( str(i), result["context"], params)
           # ai = params["chain"][str(i)]["AI"]
           # print(f'Question: {question}')
           # print(f'Answer: {ai}')
