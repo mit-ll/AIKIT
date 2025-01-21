@@ -207,9 +207,9 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend(doc)
             # Extract and load images
-            loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
-            doc = loader.load()
-            documents.extend(doc)
+            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            # doc = loader.load()
+            # documents.extend(doc)
 
         if f.endswith( ".txt"):
             loader = TextLoader( f )
@@ -240,9 +240,9 @@ def create_vector_store( params ):
             doc = loader.load()
             documents.extend( doc )
             # Extract and load images
-            loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
-            doc = loader.load()
-            documents.extend(doc)
+            # loader = ExtractedImageLoader(f, image_dir, extract_caption, persist_images )
+            # doc = loader.load()
+            # documents.extend(doc)
 
         if f.endswith( ".xls" ) or f.endswith( ".xlsx" ) or f.endswith( ".XLS" ) or f.endswith( ".XLSX" ):
             loader = UnstructuredExcelLoader( f )
