@@ -105,7 +105,7 @@ def run_llm_rag( params, hf_token, db ):
     
     model_config = AutoConfig.from_pretrained( model_name, token=hf_token )
     
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, token=hf_token)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=False, token=hf_token)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
     

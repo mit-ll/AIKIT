@@ -45,14 +45,14 @@ environ["TRANSFORMERS_CACHE"] = "/io"
 ################################################################################
 def call_llm(model_id, question):
     hf_token = "hf_..."
-    tokenizer = AutoTokenizer.from_pretrained(model_id, token=hf_token, load_in_16bit=True, trust_remote_code=True, device_map="auto", )
+    tokenizer = AutoTokenizer.from_pretrained(model_id, token=hf_token, load_in_16bit=True, trust_remote_code=False, device_map="auto", )
     
     pipeline = transformers.pipeline(
         "text-generation",
         model=model_id,
         tokenizer=tokenizer,
         torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
+        trust_remote_code=False,
         device_map="auto",
     )
 

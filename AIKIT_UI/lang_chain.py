@@ -122,14 +122,14 @@ if ( arg_count >= 6 ):
   history_file = sys.argv[5]
   results_file = sys.argv[6]
 
-  tokenizer = AutoTokenizer.from_pretrained(model_id, token=token_text, load_in_16bit=True, trust_remote_code=True, device_map="auto", )
+  tokenizer = AutoTokenizer.from_pretrained(model_id, token=token_text, load_in_16bit=True, trust_remote_code=False, device_map="auto", )
 
   pipeline = transformers.pipeline(
     "text-generation",
     model=model_id,
     tokenizer=tokenizer,
     torch_dtype=torch.bfloat16,
-    trust_remote_code=True,
+    trust_remote_code=False,
     device_map="auto",
     # max_length=1000,
     max_new_tokens=1000,
